@@ -1,5 +1,5 @@
 /* أملآ — عامل الخدمة: عمل بدون إنترنت مع وصول التحديثات فور توفرها */
-const CACHE = "amalan-v1";
+const CACHE = "amalan-v2";
 const CORE = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -29,7 +29,8 @@ self.addEventListener("fetch", e => {
   /* الخطوط والأصول الثابتة: الكاش أولاً */
   if (url.origin === location.origin ||
       url.hostname.includes("fonts.googleapis.com") || url.hostname.includes("fonts.gstatic.com") ||
-      url.hostname.includes("cdnjs.cloudflare.com")) {
+      url.hostname.includes("cdnjs.cloudflare.com") ||
+      url.hostname.includes("cdn.jsdelivr.net")) {
     e.respondWith(
       caches.match(e.request).then(hit => hit || fetch(e.request).then(r => {
         if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); }

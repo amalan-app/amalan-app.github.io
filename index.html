@@ -562,6 +562,28 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
   background:var(--card);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;padding:0 13px;outline:none}
 .qs-panel .qs-res{max-height:48vh;overflow-y:auto;margin-top:6px;-webkit-overflow-scrolling:touch}
 
+
+/* ======== صفحة المصحف المطبوع — ١٥ سطراً بخط مجمع الملك فهد ======== */
+.q-page15 .q-page-inner15{border:1px solid rgba(110,108,68,.25);border-radius:12px;
+  padding:14px 10px 10px;display:flex;flex-direction:column;justify-content:space-between;
+  min-height:min(128vw, 700px)}
+html.dark .q-page15 .q-page-inner15{border-color:rgba(201,196,142,.25)}
+.q-page15.centered .q-page-inner15{justify-content:center;gap:6px;min-height:min(100vw,540px)}
+.q-line{display:flex;justify-content:space-between;align-items:center;direction:rtl;
+  font-size:clamp(15px, 5.4vw, 30px);line-height:1.85;color:var(--ink);white-space:nowrap;
+  padding:0 2px}
+.q-line.few{justify-content:center;gap:.35em}
+.q-line.empty{min-height:1em}
+.q-line .qw{padding:0 1px;border-radius:7px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.q-line .qend{color:var(--gold-hi)}
+.q-line .qmk{box-shadow:inset 0 -2.5px 0 rgba(110,108,68,.55)}
+html.dark .q-line .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
+.q-sur-head.h15{margin:2px auto;padding:3px 18px;max-width:none;display:table}
+.q-sur-head.h15 .n{font-size:17px}
+.q-bsm15{font-family:'Amiri Quran','Amiri',serif;text-align:center;
+  font-size:clamp(19px,6vw,30px);color:var(--ink);line-height:1.6}
+
 </style>
 </head>
 <body>
@@ -2182,24 +2204,92 @@ function surHeadHTML(n){
     '<div class="m">'+s.type+' · '+fmt(s.count)+' آية</div></div>'+
     (n!==1 && n!==9 ? '<div class="q-bsm">بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ</div>' : '');
 }
-function renderPage(p){
-  p = Math.max(1, Math.min(604, p));
-  M.prefs.page = p; M.prefs.mode = "pages";
+/* --- الصفحة الاحتياطية (نص متدفق) عند تعذر بيانات المصحف المطبوع --- */
+function renderPageBasic(p){
   const list = M.byPage[p]||[];
-  if(list.length) M.prefs.surah = list[0].s;
-  let html = '<div class="q-page"><div class="q-page-inner">';
+  let h = '<div class="q-page"><div class="q-page-inner">';
   let cur = 0, buf = "";
   list.forEach(o=>{
     if(o.s!==cur){
-      if(buf){ html += '<div class="q-text">'+buf+'</div>'; buf=""; }
-      if(o.a===1) html += surHeadHTML(o.s);
+      if(buf){ h += '<div class="q-text">'+buf+'</div>'; buf=""; }
+      if(o.a===1) h += surHeadHTML(o.s);
       cur = o.s;
     }
     buf += ayHTML(o);
   });
-  if(buf) html += '<div class="q-text">'+buf+'</div>';
-  html += '</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
-  $("mView").innerHTML = html;
+  if(buf) h += '<div class="q-text">'+buf+'</div>';
+  h += '</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
+  $("mView").innerHTML = h;
+}
+/* --- بيانات الصفحة المطبوعة (كلمات + أسطر) من مصحف المدينة --- */
+async function pageWords(p){
+  const ck = "pw2:"+p;
+  let d = await idbGet(ck);
+  if(d) return d;
+  const j = await fetch("https://api.quran.com/api/v4/verses/by_page/"+p+"?words=true&word_fields=line_number,code_v1&per_page=60").then(r=>r.json());
+  if(!j.verses || !j.verses.length) throw new Error("empty");
+  d = j.verses.map(v=>({k:v.verse_key, w:v.words.map(x=>({l:x.line_number, c:x.code_v1, e:x.char_type_name==="end"}))}));
+  await idbSet(ck, d);
+  return d;
+}
+/* --- خط مجمع الملك فهد الخاص بالصفحة --- */
+const loadedFonts = {};
+function pageFont(p){
+  const ppp = String(p).padStart(3,"0"), fam = "QCF_P"+ppp;
+  if(loadedFonts[fam]) return loadedFonts[fam];
+  const base = "https://cdn.jsdelivr.net/gh/mustafa0x/qpc-fonts@master/";
+  const ff = new FontFace(fam, 'url("'+base+'mushaf-woff2/QCF_P'+ppp+'.woff2") format("woff2"), url("'+base+'mushaf-woff/QCF_P'+ppp+'.woff") format("woff")', {display:"swap"});
+  loadedFonts[fam] = ff.load().then(f=>{ document.fonts.add(f); return fam; });
+  return loadedFonts[fam];
+}
+/* --- بناء صفحة مطابقة للمصحف المطبوع: ١٥ سطراً بالتقسيم الرسمي --- */
+async function renderPageAuthentic(p){
+  const [verses, fam] = await Promise.all([pageWords(p), pageFont(p)]);
+  if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
+  const lines = {};
+  verses.forEach(v=>v.w.forEach(x=>{ (lines[x.l]=lines[x.l]||[]).push({c:x.c,k:v.k,e:x.e}); }));
+  const special = {}; /* أسطر رؤوس السور والبسملة */
+  verses.filter(v=>/:1$/.test(v.k)).forEach(v=>{
+    const s = +v.k.split(":")[0], fl = v.w[0].l;
+    if(s!==1 && s!==9){ special[fl-1] = {t:"bsm"}; special[fl-2] = {t:"head", s:s}; }
+    else special[fl-1] = {t:"head", s:s};
+  });
+  const nums = Object.keys(lines).map(Number).concat(Object.keys(special).map(Number));
+  const lo = Math.min(...nums), hi = Math.max(...nums);
+  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+'"><div class="q-page-inner15">';
+  for(let ln=lo; ln<=hi; ln++){
+    if(special[ln]){
+      if(special[ln].t==="head") h += surHeadHTML15(special[ln].s);
+      else h += '<div class="q-bsm15">\uFDFD</div>';
+      continue;
+    }
+    const ws = lines[ln];
+    if(!ws){ h += '<div class="q-line empty"></div>'; continue; }
+    h += '<div class="q-line'+(ws.length<3?" few":"")+'" style="font-family:\''+fam+'\'">';
+    ws.forEach(x=>{
+      const c = M.prefs.colors[x.k], mk = M.prefs.marks.includes(x.k);
+      h += '<span class="q-a qw'+(c?' qc'+c:'')+(mk?' qmk':'')+(M.playing===x.k?' playing':'')+(M.sel===x.k?' sel':'')+(x.e?' qend':'')+'" data-k="'+x.k+'">'+x.c+'</span>';
+    });
+    h += '</div>';
+  }
+  h += '</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
+  $("mView").innerHTML = h;
+}
+function surHeadHTML15(n){
+  const s = surOf(n);
+  return '<div class="q-sur-head h15"><div class="n">'+esc(s.full)+'</div></div>';
+}
+async function renderPage(p){
+  p = Math.max(1, Math.min(604, p));
+  M.prefs.page = p; M.prefs.mode = "pages";
+  const list = M.byPage[p]||[];
+  if(list.length) M.prefs.surah = list[0].s;
+  try{
+    await renderPageAuthentic(p);
+  }catch(e){
+    if(M.prefs.page===p) renderPageBasic(p);
+  }
+  if(M.prefs.page!==p) return;
   $("mView").scrollTop = 0;
   const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
   $("mSurName").textContent = names || "المصحف الشريف";
@@ -2207,6 +2297,8 @@ function renderPage(p){
   $("mSurSel").value = M.prefs.surah; $("mPageSel").value = p;
   $("mMode").textContent = "قراءة";
   savePrefs();
+  /* تهيئة الصفحتين المجاورتين مسبقاً لتقليب فوري */
+  [p+1, p-1].forEach(q=>{ if(q>=1&&q<=604){ pageWords(q).catch(()=>{}); pageFont(q).catch(()=>{}); } });
 }
 function renderFlow(n){
   n = Math.max(1, Math.min(114, n));
@@ -2229,13 +2321,14 @@ function renderFlow(n){
   savePrefs();
 }
 function rerender(){ M.prefs.mode==="pages" ? renderPage(M.prefs.page) : renderFlow(M.prefs.surah); }
-function goToKey(key, remember){
+async function goToKey(key, remember){
   const o = ayObj(key); if(!o) return;
   if(remember){ M.prevPos = {mode:M.prefs.mode, page:M.prefs.page, surah:M.prefs.surah}; $("mBackChip").classList.add("on"); }
-  if(M.prefs.mode==="pages") renderPage(o.page); else renderFlow(o.s);
+  if(M.prefs.mode==="pages") await renderPage(o.page); else renderFlow(o.s);
   requestAnimationFrame(()=>{
-    const el = $("mView").querySelector('[data-k="'+key+'"]');
-    if(el){ el.scrollIntoView({block:"center"}); el.classList.add("jflash"); setTimeout(()=>el.classList.remove("jflash"),2300); }
+    const els = $("mView").querySelectorAll('[data-k="'+key+'"]');
+    if(els.length){ els[0].scrollIntoView({block:"center"});
+      els.forEach(el=>{ el.classList.add("jflash"); setTimeout(()=>el.classList.remove("jflash"),2300); }); }
   });
 }
 function buildSelectors(){
@@ -2334,7 +2427,7 @@ function nextKey(key){ const i = M.keyIdx[key]; return i<M.flat.length-1 ? M.fla
 function markPlaying(key){
   M.playing = key;
   $("mView").querySelectorAll(".q-a.playing").forEach(e=>e.classList.remove("playing"));
-  if(key){ const el = $("mView").querySelector('[data-k="'+key+'"]'); if(el) el.classList.add("playing"); }
+  if(key) $("mView").querySelectorAll('[data-k="'+key+'"]').forEach(el=>el.classList.add("playing"));
 }
 async function playAyah(key){
   try{
@@ -2343,7 +2436,7 @@ async function playAyah(key){
     M.audio = new Audio(url);
     M.repeatLeft = M.repeatN;
     const o = ayObj(key);
-    if(M.prefs.mode==="pages" && o.page!==M.prefs.page) renderPage(o.page);
+    if(M.prefs.mode==="pages" && o.page!==M.prefs.page) await renderPage(o.page);
     if(M.prefs.mode==="flow" && o.s!==M.prefs.surah) renderFlow(o.s);
     markPlaying(key);
     const el = $("mView").querySelector('[data-k="'+key+'"]');
@@ -2434,8 +2527,7 @@ function syncAyBar(){
 function selectAyah(key){
   M.sel = key;
   $("mView").querySelectorAll(".q-a.sel").forEach(e=>e.classList.remove("sel"));
-  const el = $("mView").querySelector('[data-k="'+key+'"]');
-  if(el) el.classList.add("sel");
+  $("mView").querySelectorAll('[data-k="'+key+'"]').forEach(el=>el.classList.add("sel"));
   syncAyBar();
   $("ayBar").classList.add("open");
   if($("abTafPanel").classList.contains("open")) fillTafsir(key);
@@ -2455,8 +2547,9 @@ document.querySelectorAll("#ayBar .ay-c").forEach(c=>{
     const v = +c.dataset.c;
     if(v===0) delete M.prefs.colors[M.sel]; else M.prefs.colors[M.sel] = v;
     savePrefs();
-    const el = $("mView").querySelector('[data-k="'+M.sel+'"]');
-    if(el){ el.className = el.className.replace(/\bqc\d\b/g,"").trim(); if(v) el.classList.add("qc"+v); }
+    $("mView").querySelectorAll('[data-k="'+M.sel+'"]').forEach(el=>{
+      el.className = el.className.replace(/\bqc\d\b/g,"").trim(); if(v) el.classList.add("qc"+v);
+    });
     syncAyBar();
   });
 });
@@ -2480,8 +2573,10 @@ $("abMark").addEventListener("click", ()=>{
   if(i>=0){ M.prefs.marks.splice(i,1); showToast("أُزيلت العلامة"); }
   else { M.prefs.marks.push(M.sel); showToast("حُفظت العلامة 🔖"); }
   savePrefs(); syncAyBar();
-  const el = $("mView").querySelector('[data-k="'+M.sel+'"]');
-  if(el) el.classList.toggle("q-mark", M.prefs.marks.includes(M.sel));
+  const on = M.prefs.marks.includes(M.sel);
+  $("mView").querySelectorAll('[data-k="'+M.sel+'"]').forEach(el=>{
+    el.classList.toggle("q-mark", on); el.classList.toggle("qmk", on);
+  });
 });
 $("abCopy").addEventListener("click", ()=>{
   if(!M.sel) return;
