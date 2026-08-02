@@ -929,7 +929,6 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <select class="m-sel" id="mPageSel" style="max-width:96px"></select>
       <button class="tool mzoom" id="mZoomOut" aria-label="تصغير الخط">ا−</button>
       <button class="tool mzoom" id="mZoomIn" aria-label="تكبير الخط">ا+</button>
-      <button class="tool" id="mMode">قراءة</button>
       <button class="tool" id="mNext">التالية</button>
     </div>
   </div>
@@ -2216,6 +2215,7 @@ const M = {
   sel:null, prevPos:null, tafCache:{}, urlCache:{}, opened:false
 };
 try{ const p = JSON.parse(localStorage.getItem(QP_KEY)||"null"); if(p) Object.assign(M.prefs, p); }catch(e){}
+M.prefs.mode = "pages"; /* وضعية واحدة: صفحات المصحف */
 function savePrefs(){ try{ localStorage.setItem(QP_KEY, JSON.stringify(M.prefs)); }catch(e){} }
 
 /* ---------- تخزين IndexedDB ---------- */
@@ -2453,38 +2453,15 @@ async function renderPage(p){
   $("mSurName").textContent = names || "المصحف الشريف";
   $("mInfo").textContent = "صفحة "+fmt(p)+" · الجزء "+fmt(list.length?list[0].juz:1);
   $("mSurSel").value = M.prefs.surah; $("mPageSel").value = p; $("mSlider").value = p;
-  $("mMode").textContent = "قراءة";
   savePrefs();
   /* تهيئة خط الصفحات المجاورة مسبقاً لتقليب فوري */
   if(QP) [p+1, p-1].forEach(q=>{ if(q>=1&&q<=604) ensureQcfFont(QP[q-1].f).catch(()=>{}); });
 }
-function renderFlow(n){
-  n = Math.max(1, Math.min(114, n));
-  M.prefs.surah = n; M.prefs.mode = "flow";
-  const s = M.quran.surahs[n-1];
-  $("mView").classList.remove("lock");
-  const zf = (M.prefs.zoom||1);
-  let html = '<div class="q-page"><div class="q-page-inner">'+surHeadHTML(n)+'<div class="q-text" style="font-size:'+(23.5*zf).toFixed(1)+'px">';
-  s.ayahs.forEach(a=>{
-    let t = a.text;
-    if(a.numberInSurah===1 && n!==1 && n!==9) t = t.replace(BASM_RX,"");
-    html += ayHTML({s:n, a:a.numberInSurah, key:n+":"+a.numberInSurah, text:t});
-  });
-  html += '</div></div></div>';
-  $("mView").innerHTML = html;
-  $("mView").scrollTop = 0;
-  M.prefs.page = s.ayahs[0].page;
-  $("mSurName").textContent = surOf(n).name;
-  $("mInfo").textContent = surOf(n).type+" · "+fmt(surOf(n).count)+" آية · تبدأ صفحة "+fmt(s.ayahs[0].page);
-  $("mSurSel").value = n; $("mPageSel").value = s.ayahs[0].page;
-  $("mMode").textContent = "صفحات";
-  savePrefs();
-}
-function rerender(){ M.prefs.mode==="pages" ? renderPage(M.prefs.page) : renderFlow(M.prefs.surah); }
+function rerender(){ renderPage(M.prefs.page); }
 async function goToKey(key, remember){
   const o = ayObj(key); if(!o) return;
   if(remember){ M.prevPos = {mode:M.prefs.mode, page:M.prefs.page, surah:M.prefs.surah}; $("mBackChip").classList.add("on"); }
-  if(M.prefs.mode==="pages") await renderPage(o.page); else renderFlow(o.s);
+  await renderPage(o.page);
   requestAnimationFrame(()=>{
     const els = $("mView").querySelectorAll('[data-k="'+key+'"]');
     if(els.length){ els[0].scrollIntoView({block:"center"});
@@ -2596,8 +2573,7 @@ async function playAyah(key){
     M.audio = new Audio(url);
     M.repeatLeft = M.repeatN;
     const o = ayObj(key);
-    if(M.prefs.mode==="pages" && o.page!==M.prefs.page) await renderPage(o.page);
-    if(M.prefs.mode==="flow" && o.s!==M.prefs.surah) renderFlow(o.s);
+    if(o.page!==M.prefs.page) await renderPage(o.page);
     markPlaying(key);
     const el = $("mView").querySelector('[data-k="'+key+'"]');
     if(el) el.scrollIntoView({block:"center", behavior:"smooth"});
@@ -2821,8 +2797,7 @@ $("mView").addEventListener("touchend", e=>{
   tX=null;
   if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.2){
     hideAyBar();
-    if(M.prefs.mode==="pages") dx>0 ? renderPage(M.prefs.page+1) : renderPage(M.prefs.page-1);
-    else dx>0 ? renderFlow(M.prefs.surah+1) : renderFlow(M.prefs.surah-1);
+    dx>0 ? renderPage(M.prefs.page+1) : renderPage(M.prefs.page-1);
   }
 }, {passive:true});
 
@@ -2890,22 +2865,18 @@ $("mSlider").addEventListener("change", ()=>{
 /* ---------- التنقل ---------- */
 $("mPrev").addEventListener("click", ()=>{
   hideAyBar();
-  if(M.prefs.mode==="pages") renderPage(M.prefs.page-1); else renderFlow(M.prefs.surah-1);
+  renderPage(M.prefs.page-1);
 });
 $("mNext").addEventListener("click", ()=>{
   hideAyBar();
-  if(M.prefs.mode==="pages") renderPage(M.prefs.page+1); else renderFlow(M.prefs.surah+1);
+  renderPage(M.prefs.page+1);
 });
 $("mSurSel").addEventListener("change", ()=>{
   hideAyBar();
   const n = +$("mSurSel").value;
-  if(M.prefs.mode==="pages") renderPage(surOf(n).start); else renderFlow(n);
+  renderPage(surOf(n).start);
 });
 $("mPageSel").addEventListener("change", ()=>{ hideAyBar(); renderPage(+$("mPageSel").value); });
-$("mMode").addEventListener("click", ()=>{
-  hideAyBar();
-  if(M.prefs.mode==="pages") renderFlow(M.prefs.surah); else renderPage(M.prefs.page);
-});
 /* ---------- تكبير وتصغير الخط (لضعاف النظر) ---------- */
 const ZSTEPS = [1, 1.15, 1.3, 1.5, 1.75, 2];
 function zoomIdx(){ const z=M.prefs.zoom||1; let b=0,bd=9; ZSTEPS.forEach((v,i)=>{ const d=Math.abs(v-z); if(d<bd){bd=d;b=i;} }); return b; }
@@ -2919,11 +2890,11 @@ function applyZoom(i){
 $("mZoomIn").addEventListener("click", ()=>{ hideAyBar(); applyZoom(zoomIdx()+1); });
 $("mZoomOut").addEventListener("click", ()=>{ hideAyBar(); applyZoom(zoomIdx()-1); });
 /* إعادة ضبط مقاس الصفحة عند تدوير الجهاز أو تغيّر المقاس */
-window.addEventListener("resize", ()=>{ if(M.prefs.mode==="pages" && $("mView").querySelector(".q-page-inner15")) fitPage(); });
+window.addEventListener("resize", ()=>{ if($("mView").querySelector(".q-page-inner15")) fitPage(); });
 $("mBackChip").addEventListener("click", ()=>{
   const p = M.prevPos; $("mBackChip").classList.remove("on"); M.prevPos=null;
   if(!p) return;
-  p.mode==="pages" ? renderPage(p.page) : renderFlow(p.surah);
+  renderPage(p.page);
 });
 
 /* ---------- فتح وإغلاق ---------- */
