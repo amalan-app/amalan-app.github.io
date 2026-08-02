@@ -440,7 +440,8 @@ html.dark .abtn.del-act{border-color:rgba(224,150,124,.6);background:rgba(224,15
 .m-title .s{font-family:var(--f-display);font-size:18px;color:var(--gold-hi);font-weight:700;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m-title .i{font-size:11px;color:var(--muted);margin-top:1px}
-.m-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(140px + env(safe-area-inset-bottom))}
+.m-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(140px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+.m-view.lock{overflow:hidden;touch-action:pan-x;overscroll-behavior:none}
 .m-load{text-align:center;color:var(--muted);font-size:14.5px;line-height:2;padding-top:22vh}
 .m-load .big{font-family:var(--f-display);font-size:22px;color:var(--gold-hi)}
 .q-page{max-width:560px;margin:0 auto 20px;padding:8px;border:2px solid rgba(110,108,68,.4);
@@ -454,8 +455,8 @@ html.dark .q-page-inner{border-color:rgba(201,196,142,.25)}
 .q-a{cursor:pointer;border-radius:9px;padding:1px 3px;transition:background .3s,box-shadow .3s;
   -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .q-a.tapsel{background:var(--gold-dim)}
-.q-page{animation:pageIn .38s var(--ease)}
-@keyframes pageIn{from{opacity:.35;transform:translateX(-16px)}to{opacity:1;transform:none}}
+.q-page{animation:pageIn .24s var(--ease);--pgx:-14px}
+@keyframes pageIn{from{opacity:.3;transform:translateX(var(--pgx))}to{opacity:1;transform:none}}
 .q-a.playing{background:var(--gold-dim);box-shadow:0 0 0 1.5px rgba(110,108,68,.5)}
 html.dark .q-a.playing{box-shadow:0 0 0 1.5px rgba(201,196,142,.5)}
 .q-a.jflash{animation:jflash 2.2s var(--ease)}
@@ -563,26 +564,36 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 .qs-panel .qs-res{max-height:48vh;overflow-y:auto;margin-top:6px;-webkit-overflow-scrolling:touch}
 
 
-/* ======== صفحة المصحف المطبوع — ١٥ سطراً بخط مجمع الملك فهد ======== */
+/* ======== صفحة المصحف المطبوع — ١٥ سطراً بخط مجمع الملك فهد (الإصدار الرابع) ======== */
+.q-page15{margin-bottom:0}
 .q-page15 .q-page-inner15{border:1px solid rgba(110,108,68,.25);border-radius:12px;
-  padding:14px 10px 10px;display:flex;flex-direction:column;justify-content:space-between;
-  min-height:min(128vw, 700px)}
+  padding:10px 9px;display:flex;flex-direction:column;justify-content:space-between}
 html.dark .q-page15 .q-page-inner15{border-color:rgba(201,196,142,.25)}
-.q-page15.centered .q-page-inner15{justify-content:center;gap:6px;min-height:min(100vw,540px)}
+.q-page15.centered .q-page-inner15{justify-content:center;gap:.35em}
 .q-line{display:flex;justify-content:space-between;align-items:center;direction:rtl;
-  font-size:clamp(15px, 5.4vw, 30px);line-height:1.85;color:var(--ink);white-space:nowrap;
-  padding:0 2px}
-.q-line.few{justify-content:center;gap:.35em}
-.q-line.empty{min-height:1em}
-.q-line .qw{padding:0 1px;border-radius:7px;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.q-line .qend{color:var(--gold-hi)}
-.q-line .qmk{box-shadow:inset 0 -2.5px 0 rgba(110,108,68,.55)}
-html.dark .q-line .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
-.q-sur-head.h15{margin:2px auto;padding:3px 18px;max-width:none;display:table}
-.q-sur-head.h15 .n{font-size:17px}
-.q-bsm15{font-family:'Amiri Quran','Amiri',serif;text-align:center;
-  font-size:clamp(19px,6vw,30px);color:var(--ink);line-height:1.6}
+  font-size:var(--qfs, clamp(15px,5.2vw,29px));line-height:1.72;color:var(--ink);white-space:nowrap;
+  padding:0 2px;min-height:1.72em}
+.q-line.qcen{justify-content:center;gap:.3em}
+/* الآية ككتلة واحدة متصلة — التظليل يشمل الآية كاملة */
+.q-run{display:flex;justify-content:space-between;align-items:center;padding:.06em .12em;
+  border-radius:.28em;transition:background .4s var(--ease),box-shadow .4s var(--ease)}
+.q-run .qg,.q-lprun .qg{font-style:normal;display:inline-block}
+.q-run .qend,.q-lprun .qend{color:var(--gold-hi)}
+.q-sh{font-family:'QCF4_QBSML';font-size:1.34em;color:var(--gold-hi);line-height:1.3}
+.q-bs{font-size:1.06em}
+.q-orn{font-family:'QCF4_QBSML';color:var(--gold-hi)}
+.qmk{box-shadow:inset 0 -2.5px 0 rgba(110,108,68,.55)}
+html.dark .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
+/* ======== وضع الحروف الكبيرة (تكبير الخط) ======== */
+.q-lp .q-lp-inner{border:1px solid rgba(110,108,68,.25);border-radius:12px;padding:14px 12px;
+  direction:rtl;color:var(--ink)}
+html.dark .q-lp .q-lp-inner{border-color:rgba(201,196,142,.25)}
+.q-lptxt{direction:rtl;text-align:right;line-height:2.05;letter-spacing:.5px;word-break:keep-all}
+.q-lprun{border-radius:.26em;padding:.05em .1em;transition:background .4s var(--ease),box-shadow .4s var(--ease);
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+.q-lpsh{font-family:'QCF4_QBSML';text-align:center;font-size:1.4em;color:var(--gold-hi);margin:.25em 0;line-height:1.4}
+.q-lpbs{text-align:center;font-size:1.05em;margin:.15em 0}
+.mzoom{font-family:var(--f-ui);font-weight:800;letter-spacing:.5px}
 
 
 /* ======== شريط التنقل السريع بين الصفحات ======== */
@@ -916,6 +927,8 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <button class="tool" id="mPrev">السابقة</button>
       <select class="m-sel" id="mSurSel"></select>
       <select class="m-sel" id="mPageSel" style="max-width:96px"></select>
+      <button class="tool mzoom" id="mZoomOut" aria-label="تصغير الخط">ا−</button>
+      <button class="tool mzoom" id="mZoomIn" aria-label="تكبير الخط">ا+</button>
       <button class="tool" id="mMode">قراءة</button>
       <button class="tool" id="mNext">التالية</button>
     </div>
@@ -2197,7 +2210,7 @@ const { $, fmt, showToast, buzz } = window.AMALAN;
 const QP_KEY = "amalan:quran_prefs";
 const M = {
   quran:null, surahs:null, byPage:null, flat:null, keyIdx:{},
-  prefs:{mode:"pages", page:1, surah:1, reciter:null, reciterName:"", tafsir:null, colors:{}, marks:[]},
+  prefs:{mode:"pages", page:1, surah:1, reciter:null, reciterName:"", tafsir:null, colors:{}, marks:[], zoom:1},
   recitations:[], tafsirs:[], normArr:null,
   audio:null, playing:null, cont:true, repeatN:1, repeatLeft:0,
   sel:null, prevPos:null, tafCache:{}, urlCache:{}, opened:false
@@ -2277,6 +2290,7 @@ function surHeadHTML(n){
 }
 /* --- الصفحة الاحتياطية (نص متدفق) عند تعذر بيانات المصحف المطبوع --- */
 function renderPageBasic(p){
+  $("mView").classList.remove("lock");
   const list = M.byPage[p]||[];
   let h = '<div class="q-page"><div class="q-page-inner">';
   let cur = 0, buf = "";
@@ -2292,63 +2306,129 @@ function renderPageBasic(p){
   h += '</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
   $("mView").innerHTML = h;
 }
-/* --- بيانات الصفحة المطبوعة (كلمات + أسطر) من مصحف المدينة --- */
-async function pageWords(p){
-  const ck = "pw2:"+p;
-  let d = await idbGet(ck);
-  if(d) return d;
-  const j = await fetch("https://api.quran.com/api/v4/verses/by_page/"+p+"?words=true&word_fields=line_number,code_v1&per_page=60").then(r=>r.json());
-  if(!j.verses || !j.verses.length) throw new Error("empty");
-  d = j.verses.map(v=>({k:v.verse_key, w:v.words.map(x=>({l:x.line_number, c:x.code_v1, e:x.char_type_name==="end"}))}));
-  await idbSet(ck, d);
-  return d;
+/* --- بيانات مصحف المدينة كاملة محلياً (خط مجمع الملك فهد — الإصدار الرابع) --- */
+let QP=null, QPjob=null;
+function loadQcfData(){
+  if(QP) return Promise.resolve(QP);
+  if(QPjob) return QPjob;
+  QPjob = (async ()=>{
+    let txt = await idbGet("qcf4-pages").catch(()=>null);
+    if(!txt){
+      if(typeof DecompressionStream!=="function") throw new Error("old-browser");
+      const r = await fetch("qcf/pages.json.gz");
+      if(!r.ok) throw new Error("http");
+      txt = await new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).text();
+      idbSet("qcf4-pages", txt).catch(()=>{});
+    }
+    QP = JSON.parse(txt);
+    return QP;
+  })();
+  QPjob.catch(()=>{ QPjob=null; });
+  return QPjob;
 }
-/* --- خط مجمع الملك فهد الخاص بالصفحة --- */
-const loadedFonts = {};
-function pageFont(p){
-  const ppp = String(p).padStart(3,"0"), fam = "QCF_P"+ppp;
-  if(loadedFonts[fam]) return loadedFonts[fam];
-  const base = "https://cdn.jsdelivr.net/gh/mustafa0x/qpc-fonts@master/";
-  const ff = new FontFace(fam, 'url("'+base+'mushaf-woff2/QCF_P'+ppp+'.woff2") format("woff2"), url("'+base+'mushaf-woff/QCF_P'+ppp+'.woff") format("woff")', {display:"swap"});
-  loadedFonts[fam] = ff.load().then(f=>{ document.fonts.add(f); return fam; });
-  return loadedFonts[fam];
+const qcfFonts = {};
+function ensureQcfFont(n){
+  if(qcfFonts[n]) return qcfFonts[n];
+  const url = "qcf/fonts/"+n+(n==="QCF4_QBSML"?".woff2":"_W.woff2");
+  const ff = new FontFace(n, 'url("'+url+'")', {display:"block"});
+  qcfFonts[n] = ff.load().then(f=>{ document.fonts.add(f); return n; });
+  qcfFonts[n].catch(()=>{ delete qcfFonts[n]; });
+  return qcfFonts[n];
+}
+/* سطر المصحف: تُجمَّع كلمات الآية الواحدة في كتلة واحدة متصلة
+   حتى يشمل التظليل والتلوين الآية كاملة لا كلمةً كلمة */
+function lineRunsHTML(L, fam){
+  const segs=[];
+  L.forEach(g=>{
+    const k=(g[2]==="w"||g[2]==="e")?g[3]:null;
+    const last=segs[segs.length-1];
+    if(k && last && last.k===k) last.g.push(g);
+    else segs.push({k:k, t:g[2], g:[g]});
+  });
+  return segs.map(sg=>{
+    if(sg.k){
+      const k=sg.k, c=M.prefs.colors[k], mk=M.prefs.marks.includes(k);
+      const inner=sg.g.map(g=>'<i class="qg'+(g[2]==="e"?' qend':'')+'"'+(g[1]===1?' style="font-family:QCF4_QBSML"':'')+'>'+String.fromCodePoint(g[0])+'</i>').join('');
+      return '<span class="q-a q-run'+(c?' qc'+c:'')+(mk?' qmk':'')+(M.playing===k?' playing':'')+(M.sel===k?' sel':'')+
+        '" data-k="'+k+'" style="flex-grow:'+sg.g.length+';font-family:\''+fam+'\'">'+inner+'</span>';
+    }
+    const g=sg.g[0], ch=String.fromCodePoint(g[0]);
+    if(sg.t==="s") return '<span class="q-sh">'+ch+'</span>';
+    if(sg.t==="b") return '<span class="q-bs" style="font-family:\''+fam+'\'">'+ch+'</span>';
+    return '<span class="q-orn"'+(g[1]===1?'':' style="font-family:\''+fam+'\'"')+'>'+ch+'</span>';
+  }).join('');
+}
+/* ضبط مقاس الصفحة لتملأ الشاشة تماماً — بلا أي تمرير */
+function fitPage(){
+  const mv=$("mView"), inner=mv.querySelector(".q-page-inner15");
+  if(!inner) return;
+  const cs=getComputedStyle(mv);
+  const avail = mv.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 48;
+  const w = inner.clientWidth - 20;
+  const lines = Math.max(inner.children.length, 8);
+  const fs = Math.min(w*0.0545, avail/lines/1.74);
+  inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
+  inner.style.height = Math.max(avail, 200)+"px";
+  /* ضمانة: إن تجاوز أعرض سطر عرض الصفحة يُصغَّر الخط تلقائياً — لا تمرير جانبي أبداً */
+  requestAnimationFrame(()=>{
+    let over = 1;
+    inner.querySelectorAll(".q-line").forEach(l=>{
+      if(l.scrollWidth > l.clientWidth+1) over = Math.max(over, l.scrollWidth/l.clientWidth);
+    });
+    if(over>1.003){
+      const cur = parseFloat(inner.style.getPropertyValue("--qfs"))||fs;
+      inner.style.setProperty("--qfs", (cur/over*0.99).toFixed(2)+"px");
+    }
+  });
 }
 /* --- بناء صفحة مطابقة للمصحف المطبوع: ١٥ سطراً بالتقسيم الرسمي --- */
+let lastPageN = 0;
 async function renderPageAuthentic(p){
-  const [verses, fam] = await Promise.all([pageWords(p), pageFont(p)]);
+  const data = await loadQcfData();
+  const pg = data[p-1];
+  const needQb = pg.l.some(L=>L.some(g=>g[1]===1));
+  const loads=[ensureQcfFont(pg.f)]; if(needQb) loads.push(ensureQcfFont("QCF4_QBSML"));
+  await Promise.all(loads);
   if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
-  const lines = {};
-  verses.forEach(v=>v.w.forEach(x=>{ (lines[x.l]=lines[x.l]||[]).push({c:x.c,k:v.k,e:x.e}); }));
-  const special = {}; /* أسطر رؤوس السور والبسملة */
-  verses.filter(v=>/:1$/.test(v.k)).forEach(v=>{
-    const s = +v.k.split(":")[0], fl = v.w[0].l;
-    if(s!==1 && s!==9){ special[fl-1] = {t:"bsm"}; special[fl-2] = {t:"head", s:s}; }
-    else special[fl-1] = {t:"head", s:s};
+  const dir = (p>=lastPageN) ? "-14px" : "14px"; lastPageN = p;
+  if((M.prefs.zoom||1)>1.01){ renderLargePrint(p, pg, dir); return; }
+  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+'" style="--pgx:'+dir+'"><div class="q-page-inner15">';
+  pg.l.forEach(L=>{
+    const center = p<=2 || L.some(g=>g[2]==="s"||g[2]==="b");
+    h += '<div class="q-line'+(center?' qcen':'')+'">'+lineRunsHTML(L, pg.f)+'</div>';
   });
-  const nums = Object.keys(lines).map(Number).concat(Object.keys(special).map(Number));
-  const lo = Math.min(...nums), hi = Math.max(...nums);
-  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+'"><div class="q-page-inner15">';
-  for(let ln=lo; ln<=hi; ln++){
-    if(special[ln]){
-      if(special[ln].t==="head") h += surHeadHTML15(special[ln].s);
-      else h += '<div class="q-bsm15">\uFDFD</div>';
-      continue;
-    }
-    const ws = lines[ln];
-    if(!ws){ h += '<div class="q-line empty"></div>'; continue; }
-    h += '<div class="q-line'+(ws.length<3?" few":"")+'" style="font-family:\''+fam+'\'">';
-    ws.forEach(x=>{
-      const c = M.prefs.colors[x.k], mk = M.prefs.marks.includes(x.k);
-      h += '<span class="q-a qw'+(c?' qc'+c:'')+(mk?' qmk':'')+(M.playing===x.k?' playing':'')+(M.sel===x.k?' sel':'')+(x.e?' qend':'')+'" data-k="'+x.k+'">'+x.c+'</span>';
-    });
-    h += '</div>';
-  }
   h += '</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
   $("mView").innerHTML = h;
+  $("mView").classList.add("lock");
+  fitPage();
 }
-function surHeadHTML15(n){
-  const s = surOf(n);
-  return '<div class="q-sur-head h15"><div class="n">'+esc(s.full)+'</div></div>';
+/* --- وضع الحروف الكبيرة: نفس الصفحة بخط مكبَّر ينساب بحرية (لضعاف النظر) --- */
+function renderLargePrint(p, pg, dir){
+  const mv=$("mView");
+  const base=(mv.clientWidth-28)*0.055;
+  const fs=(base*(M.prefs.zoom||1)).toFixed(1);
+  mv.classList.remove("lock");
+  let h='<div class="q-page q-lp" style="--pgx:'+(dir||"-14px")+'"><div class="q-lp-inner" style="font-family:\''+pg.f+'\';font-size:'+fs+'px">';
+  let cur="", runKey=null, runGl=[];
+  const emitRun=()=>{
+    if(!runGl.length) return;
+    const k=runKey, c=M.prefs.colors[k], mk=M.prefs.marks.includes(k);
+    cur+='<span class="q-a q-lprun'+(c?' qc'+c:'')+(mk?' qmk':'')+(M.playing===k?' playing':'')+(M.sel===k?' sel':'')+'" data-k="'+k+'">'+
+      runGl.map(g=>'<i class="qg'+(g[2]==="e"?' qend':'')+'"'+(g[1]===1?' style="font-family:QCF4_QBSML"':'')+'>'+String.fromCodePoint(g[0])+'</i>').join('')+'</span>';
+    runGl=[]; runKey=null;
+  };
+  const flushTxt=()=>{ if(cur){ h+='<div class="q-lptxt">'+cur+'</div>'; cur=""; } };
+  pg.l.forEach(L=>L.forEach(g=>{
+    if(g[2]==="s"){ emitRun(); flushTxt(); h+='<div class="q-lpsh">'+String.fromCodePoint(g[0])+'</div>'; return; }
+    if(g[2]==="b"){ emitRun(); flushTxt(); h+='<div class="q-lpbs">'+String.fromCodePoint(g[0])+'</div>'; return; }
+    const k=g[3];
+    if(!k){ emitRun(); cur+='<span class="q-orn"'+(g[1]===1?'':' style="font-family:inherit"')+'>'+String.fromCodePoint(g[0])+'</span>'; return; }
+    if(runKey!==k){ emitRun(); runKey=k; }
+    runGl.push(g);
+  }));
+  emitRun(); flushTxt();
+  h+='</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
+  mv.innerHTML=h;
 }
 async function renderPage(p){
   p = Math.max(1, Math.min(604, p));
@@ -2366,6 +2446,8 @@ async function renderPage(p){
     renderPageBasic(p);
   }
   if(M.prefs.page!==p) return;
+  /* صفحة مشدودة: بلا تمرير في المقاس الأصلي — تمرير حر عند التكبير */
+  $("mView").classList.toggle("lock", (M.prefs.zoom||1)<=1.01 && !!$("mView").querySelector(".q-page15"));
   $("mView").scrollTop = 0;
   const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
   $("mSurName").textContent = names || "المصحف الشريف";
@@ -2373,14 +2455,16 @@ async function renderPage(p){
   $("mSurSel").value = M.prefs.surah; $("mPageSel").value = p; $("mSlider").value = p;
   $("mMode").textContent = "قراءة";
   savePrefs();
-  /* تهيئة الصفحتين المجاورتين مسبقاً لتقليب فوري */
-  [p+1, p+2, p-1].forEach(q=>{ if(q>=1&&q<=604){ pageWords(q).catch(()=>{}); pageFont(q).catch(()=>{}); } });
+  /* تهيئة خط الصفحات المجاورة مسبقاً لتقليب فوري */
+  if(QP) [p+1, p-1].forEach(q=>{ if(q>=1&&q<=604) ensureQcfFont(QP[q-1].f).catch(()=>{}); });
 }
 function renderFlow(n){
   n = Math.max(1, Math.min(114, n));
   M.prefs.surah = n; M.prefs.mode = "flow";
   const s = M.quran.surahs[n-1];
-  let html = '<div class="q-page"><div class="q-page-inner">'+surHeadHTML(n)+'<div class="q-text">';
+  $("mView").classList.remove("lock");
+  const zf = (M.prefs.zoom||1);
+  let html = '<div class="q-page"><div class="q-page-inner">'+surHeadHTML(n)+'<div class="q-text" style="font-size:'+(23.5*zf).toFixed(1)+'px">';
   s.ayahs.forEach(a=>{
     let t = a.text;
     if(a.numberInSurah===1 && n!==1 && n!==9) t = t.replace(BASM_RX,"");
@@ -2712,6 +2796,8 @@ mvEl.addEventListener("mouseup", lpCancel);
 mvEl.addEventListener("mouseleave", lpCancel);
 mvEl.addEventListener("click", e=>{
   if(lpDone){ e.preventDefault(); lpDone=false; return; }
+  /* أثناء فتح أدوات الآية: أي لمسة في أي مكان تُغلقها بانسيابية */
+  if($("ayBar").classList.contains("open")){ hideAyBar(); return; }
   const ay = e.target.closest(".q-a");
   if(ay){
     /* لمسة سريعة: تمييز لحظي فقط — الأدوات بالضغطة المطوّلة */
@@ -2720,7 +2806,6 @@ mvEl.addEventListener("click", e=>{
     });
     return;
   }
-  if($("ayBar").classList.contains("open")){ hideAyBar(); return; }
   if($("qsPanel").classList.contains("open")){ $("qsPanel").classList.remove("open"); return; }
   if(M.prefs.mode!=="pages") return;
   const r = mvEl.getBoundingClientRect(), x = e.clientX - r.left, w = r.width;
@@ -2821,6 +2906,20 @@ $("mMode").addEventListener("click", ()=>{
   hideAyBar();
   if(M.prefs.mode==="pages") renderFlow(M.prefs.surah); else renderPage(M.prefs.page);
 });
+/* ---------- تكبير وتصغير الخط (لضعاف النظر) ---------- */
+const ZSTEPS = [1, 1.15, 1.3, 1.5, 1.75, 2];
+function zoomIdx(){ const z=M.prefs.zoom||1; let b=0,bd=9; ZSTEPS.forEach((v,i)=>{ const d=Math.abs(v-z); if(d<bd){bd=d;b=i;} }); return b; }
+function applyZoom(i){
+  i = Math.max(0, Math.min(ZSTEPS.length-1, i));
+  M.prefs.zoom = ZSTEPS[i]; savePrefs();
+  try{buzz(6);}catch(_e){}
+  showToast(i===0 ? "حجم المصحف الأصلي — صفحة كاملة" : "حجم الخط "+fmt(Math.round(ZSTEPS[i]*100))+"٪");
+  rerender();
+}
+$("mZoomIn").addEventListener("click", ()=>{ hideAyBar(); applyZoom(zoomIdx()+1); });
+$("mZoomOut").addEventListener("click", ()=>{ hideAyBar(); applyZoom(zoomIdx()-1); });
+/* إعادة ضبط مقاس الصفحة عند تدوير الجهاز أو تغيّر المقاس */
+window.addEventListener("resize", ()=>{ if(M.prefs.mode==="pages" && $("mView").querySelector(".q-page-inner15")) fitPage(); });
 $("mBackChip").addEventListener("click", ()=>{
   const p = M.prevPos; $("mBackChip").classList.remove("on"); M.prevPos=null;
   if(!p) return;
@@ -2830,6 +2929,7 @@ $("mBackChip").addEventListener("click", ()=>{
 /* ---------- فتح وإغلاق ---------- */
 $("btnMushaf").addEventListener("click", async ()=>{
   $("mushaf").classList.add("open");
+  loadQcfData().catch(()=>{}); /* تهيئة بيانات المصحف المطبوع مبكراً */
   const ok = await ensureQuran();
   if(!ok) return;
   if(!M.opened){ buildSelectors(); M.opened=true; }
