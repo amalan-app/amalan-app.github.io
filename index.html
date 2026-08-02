@@ -584,6 +584,26 @@ html.dark .q-line .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
 .q-bsm15{font-family:'Amiri Quran','Amiri',serif;text-align:center;
   font-size:clamp(19px,6vw,30px);color:var(--ink);line-height:1.6}
 
+
+/* ======== شريط التنقل السريع بين الصفحات ======== */
+.m-nav{flex-direction:column;gap:6px}
+.m-nav-row{display:flex;gap:7px;justify-content:center;align-items:center;flex-wrap:wrap;width:100%}
+#mSlider{width:100%;max-width:560px;direction:rtl;accent-color:var(--gold);height:28px;margin:0;cursor:pointer;
+  -webkit-appearance:none;appearance:none;background:transparent}
+#mSlider::-webkit-slider-runnable-track{height:7px;border-radius:4px;background:rgba(110,108,68,.22)}
+#mSlider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
+  background:var(--gold);border:2.5px solid var(--bg1);margin-top:-9px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#mSlider::-moz-range-track{height:7px;border-radius:4px;background:rgba(110,108,68,.22)}
+#mSlider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--gold);border:2.5px solid var(--bg1)}
+html.dark #mSlider::-webkit-slider-runnable-track{background:rgba(201,196,142,.25)}
+html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
+.m-tip{position:fixed;bottom:calc(126px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--bg2);border:1px solid var(--card-b);border-radius:15px;padding:9px 20px;
+  font-size:15px;font-weight:700;color:var(--gold-hi);font-family:var(--f-display);
+  box-shadow:0 12px 34px rgba(0,0,0,.35);display:none;z-index:88;white-space:nowrap}
+.m-tip.on{display:block}
+.q-line, .q-text{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+
 </style>
 </head>
 <body>
@@ -596,6 +616,7 @@ html.dark .q-line .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
     <div class="hdr-actions">
       <button class="icon-btn" id="btnList" aria-label="قائمة الأذكار">☰</button>
       <button class="icon-btn" id="btnMushaf" aria-label="المصحف">📖</button>
+      <button class="icon-btn" id="btnShareApp" aria-label="مشاركة التطبيق">⤴</button>
     </div>
     <div class="brand">
       <h1>أملآ</h1>
@@ -889,11 +910,33 @@ html.dark .q-line .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
   </div>
 
   <div class="m-nav">
-    <button class="tool" id="mPrev">السابقة</button>
-    <select class="m-sel" id="mSurSel"></select>
-    <select class="m-sel" id="mPageSel" style="max-width:104px"></select>
-    <button class="tool" id="mMode">قراءة</button>
-    <button class="tool" id="mNext">التالية</button>
+    <div class="m-tip" id="mTip"></div>
+    <input type="range" id="mSlider" min="1" max="604" value="1" aria-label="التنقل بين الصفحات">
+    <div class="m-nav-row">
+      <button class="tool" id="mPrev">السابقة</button>
+      <select class="m-sel" id="mSurSel"></select>
+      <select class="m-sel" id="mPageSel" style="max-width:96px"></select>
+      <button class="tool" id="mMode">قراءة</button>
+      <button class="tool" id="mNext">التالية</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- مشاركة التطبيق وتثبيته -->
+<div class="modal" id="shareModal">
+  <div class="scrim" data-close="shareModal"></div>
+  <div class="box">
+    <h3>شارك أملاً · أجرٌ جارٍ بإذن الله</h3>
+    <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:12px">﴿وَمَن أَحيَاهَا فَكَأَنَّمَا أَحيَا النَّاسَ جَمِيعًا﴾ — كل تسبيحة يسبّحها من دللته على أملاً، لك مثل أجرها.</p>
+    <div class="modal-actions" style="flex-direction:column;gap:9px;margin-top:6px">
+      <button class="btn primary" id="shareAppBtn" style="width:100%">📤 مشاركة التطبيق</button>
+      <button class="btn ghost" id="installAppBtn" style="width:100%">📲 إضافة إلى الشاشة الرئيسية</button>
+    </div>
+    <div id="iosInstallHint" style="display:none;margin-top:11px;font-size:13px;color:var(--ink);line-height:2;background:var(--card);border:1px solid var(--card-b);border-radius:13px;padding:11px 13px">
+      على الآيفون: افتح أملاً في متصفح <b>سفاري</b> ← اضغط زر المشاركة <b>⬆︎</b> أسفل الشاشة ← اختر «<b>إضافة إلى الشاشة الرئيسية</b>» — وستجد أيقونة أملآ بين تطبيقاتك.
+    </div>
+    <div class="modal-actions"><button class="btn ghost" data-close="shareModal">تم</button></div>
   </div>
 </div>
 
@@ -2031,15 +2074,23 @@ function initGeo(){
     const c = localStorage.getItem("amalan:geo");
     if(c){ geo = JSON.parse(c); geoReal = true; }
   }catch(e){}
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(p=>{
-      const moved = Math.abs(geo.lat-p.coords.latitude)>0.05 || Math.abs(geo.lng-p.coords.longitude)>0.05;
-      geo.lat = p.coords.latitude; geo.lng = p.coords.longitude; geoReal = true;
+  /* تحديد صامت عبر الشبكة — لا يظهر أي إذن أو إشعار للمستخدم */
+  fetch("https://ipwho.is/").then(r=>r.json()).then(d=>{
+    if(!d || d.success===false || !d.latitude) throw 0;
+    const moved = Math.abs(geo.lat-d.latitude)>0.2 || Math.abs(geo.lng-d.longitude)>0.2;
+    geo.lat = d.latitude; geo.lng = d.longitude; geoReal = true;
+    try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
+    updatePrayerPill();
+    if(!geo.name || moved) geoName();
+  }).catch(()=>{
+    fetch("https://ipapi.co/json/").then(r=>r.json()).then(d=>{
+      if(!d || !d.latitude) return;
+      geo.lat = d.latitude; geo.lng = d.longitude; geoReal = true;
       try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
       updatePrayerPill();
-      if(!geo.name || moved) geoName();
-    }, ()=>{ updatePrayerPill(); }, {maximumAge:6*3600*1000, timeout:8000});
-  }
+      if(!geo.name) geoName();
+    }).catch(()=>{ updatePrayerPill(); });
+  });
 }
 const PRAYER_ORDER = ["fajr","dhuhr","asr","maghrib","isha"];
 function fmtTime(h){
@@ -2078,7 +2129,7 @@ function updatePrayerPill(){
       const mins = Math.round(((24-nowH)+tmr.fajr)*60);
       leftTxt = "باقي على أذان الفجر "+fmt(Math.floor(mins/60))+" س "+fmt(mins%60)+" د";
     }
-    $("pLeft").textContent = leftTxt+(geoReal ? (geo.name ? " · 📍 "+geo.name : "") : " · حسب توقيت الرياض");
+    $("pLeft").textContent = leftTxt+(geoReal ? (geo.name ? "  |  "+geo.name : "") : "  |  الرياض");
     bar.style.display = "";
     /* إشعار دخول الوقت */
     if(prevNextKey && prevNextKey!==nextKey){
@@ -2093,6 +2144,27 @@ function updatePrayerPill(){
   }catch(e){ bar.style.display="none"; }
 }
 setInterval(updatePrayerPill, 30000);
+
+
+/* ================= مشاركة التطبيق وتثبيته ================= */
+let installEv = null;
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); installEv = e; });
+const APP_URL = "https://amalan-app.github.io";
+const IS_STANDALONE = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+$("btnShareApp").addEventListener("click", ()=>openLayer("shareModal"));
+$("shareAppBtn").addEventListener("click", async ()=>{
+  const data = {title:"أملآ", text:"أملآ — عدّاد الباقيات الصالحات والمصحف الشريف بالتفاسير والتلاوات ومواقيت الصلاة، مجاناً", url:APP_URL};
+  try{
+    if(navigator.share){ await navigator.share(data); }
+    else { await navigator.clipboard.writeText(APP_URL); showToast("✓ نُسخ رابط التطبيق — شاركه مع من تحب"); }
+  }catch(e){}
+});
+$("installAppBtn").addEventListener("click", async ()=>{
+  if(IS_STANDALONE){ showToast("التطبيق مثبّت على شاشتك بالفعل ✓"); return; }
+  if(installEv){ installEv.prompt(); try{ await installEv.userChoice; }catch(e){} installEv = null; return; }
+  const hint = $("iosInstallHint");
+  hint.style.display = hint.style.display==="none" ? "block" : "none";
+});
 
 /* ================= الإقلاع ================= */
 (async function init(){
@@ -2299,7 +2371,7 @@ async function renderPage(p){
   const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
   $("mSurName").textContent = names || "المصحف الشريف";
   $("mInfo").textContent = "صفحة "+fmt(p)+" · الجزء "+fmt(list.length?list[0].juz:1);
-  $("mSurSel").value = M.prefs.surah; $("mPageSel").value = p;
+  $("mSurSel").value = M.prefs.surah; $("mPageSel").value = p; $("mSlider").value = p;
   $("mMode").textContent = "قراءة";
   savePrefs();
   /* تهيئة الصفحتين المجاورتين مسبقاً لتقليب فوري */
@@ -2583,27 +2655,76 @@ $("abMark").addEventListener("click", ()=>{
     el.classList.toggle("q-mark", on); el.classList.toggle("qmk", on);
   });
 });
-$("abCopy").addEventListener("click", ()=>{
+$("abCopy").addEventListener("click", async ()=>{
   if(!M.sel) return;
-  const o = ayObj(M.sel);
-  const txt = "﴿"+o.text+"﴾ ["+surOf(o.s).name+": "+o.a+"]";
-  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
-    .then(()=>showToast("نُسخت الآية")).catch(()=>showToast("تعذّر النسخ"));
+  const key = M.sel, o = ayObj(key);
+  const btn = $("abCopy");
+  btn.textContent = "…";
+  let tafPart = "";
+  try{
+    await loadTafsirs();
+    const tid = M.prefs.tafsir, ck = tid+"|"+key;
+    if(!M.tafCache[ck]){
+      const j = await fetch("https://api.quran.com/api/v4/tafsirs/"+tid+"/by_ayah/"+key).then(r=>r.json());
+      let t = (j.tafsir && j.tafsir.text) || "";
+      M.tafCache[ck] = t.replace(/<script[\s\S]*?<\/script>/gi,"");
+    }
+    const tmp = document.createElement("div"); tmp.innerHTML = M.tafCache[ck];
+    const plain = (tmp.textContent||"").trim();
+    const book = (M.tafsirs.find(t=>t.id===M.prefs.tafsir)||{}).name || "التفسير";
+    if(plain) tafPart = "\n\n"+book+":\n"+plain;
+  }catch(e){}
+  const txt = "﴿"+o.text+"﴾ ["+surOf(o.s).name+": "+fmt(o.a)+"]"+tafPart;
+  try{
+    await navigator.clipboard.writeText(txt);
+    btn.textContent = "✓"; btn.classList.add("on");
+    try{buzz(10);}catch(_e){}
+    showToast(tafPart ? "✓ نُسخت الآية مع تفسيرها" : "✓ نُسخت الآية");
+  }catch(e){ btn.textContent = "⧉"; showToast("تعذّر النسخ"); }
+  setTimeout(()=>{ btn.textContent = "⧉"; btn.classList.remove("on"); }, 1800);
 });
 
-/* ---------- التفاعل: لمسة = تحديد · لمسة خارج النص = إخفاء/تقليب ---------- */
-$("mView").addEventListener("click", e=>{
+/* ---------- التفاعل: ضغطة مطوّلة = الأدوات · لمسة خارج النص = إخفاء/تقليب ---------- */
+const mvEl = $("mView");
+mvEl.addEventListener("contextmenu", e=>e.preventDefault());
+let lpT=null, lpKey=null, lpDone=false, lpX=0, lpY=0;
+function lpStart(key, x, y){
+  lpKey=key; lpX=x; lpY=y; lpDone=false;
+  clearTimeout(lpT);
+  lpT = setTimeout(()=>{ lpDone=true; try{buzz(12);}catch(_e){} selectAyah(lpKey); }, 420);
+}
+function lpCancel(){ clearTimeout(lpT); lpT=null; }
+mvEl.addEventListener("touchstart", e=>{
+  const ay = e.target.closest(".q-a"); if(!ay) return;
+  lpStart(ay.dataset.k, e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:true});
+mvEl.addEventListener("touchmove", e=>{
+  if(!lpT) return;
+  if(Math.abs(e.touches[0].clientX-lpX)>10 || Math.abs(e.touches[0].clientY-lpY)>10) lpCancel();
+}, {passive:true});
+mvEl.addEventListener("touchend", lpCancel, {passive:true});
+mvEl.addEventListener("touchcancel", lpCancel, {passive:true});
+mvEl.addEventListener("mousedown", e=>{
+  if(e.button!==0) return;
+  const ay = e.target.closest(".q-a"); if(!ay) return;
+  lpStart(ay.dataset.k, e.clientX, e.clientY);
+});
+mvEl.addEventListener("mouseup", lpCancel);
+mvEl.addEventListener("mouseleave", lpCancel);
+mvEl.addEventListener("click", e=>{
+  if(lpDone){ e.preventDefault(); lpDone=false; return; }
   const ay = e.target.closest(".q-a");
   if(ay){
-    if(M.sel===ay.dataset.k){ hideAyBar(); return; } /* لمس نفس الآية يخفي الشريط */
-    selectAyah(ay.dataset.k);
+    /* لمسة سريعة: تمييز لحظي فقط — الأدوات بالضغطة المطوّلة */
+    $("mView").querySelectorAll('[data-k="'+ay.dataset.k+'"]').forEach(el=>{
+      el.classList.add("tapsel"); setTimeout(()=>el.classList.remove("tapsel"), 700);
+    });
     return;
   }
   if($("ayBar").classList.contains("open")){ hideAyBar(); return; }
   if($("qsPanel").classList.contains("open")){ $("qsPanel").classList.remove("open"); return; }
-  /* لمس حواف الصفحة يقلّبها */
   if(M.prefs.mode!=="pages") return;
-  const r = $("mView").getBoundingClientRect(), x = e.clientX - r.left, w = r.width;
+  const r = mvEl.getBoundingClientRect(), x = e.clientX - r.left, w = r.width;
   if(x < w*0.26) renderPage(M.prefs.page+1);
   else if(x > w*0.74) renderPage(M.prefs.page-1);
 });
@@ -2667,6 +2788,21 @@ $("mSearchBtn").addEventListener("click", ()=>{
   if(open){ renderMarksList(); setTimeout(()=>$("qsInput").focus(), 380); }
 });
 
+
+/* ---------- شريط التمرير السريع ---------- */
+function surahForPage(p){ let s=M.surahs[0]; for(const x of M.surahs){ if(x.start<=p) s=x; else break; } return s; }
+let tipT=null;
+$("mSlider").addEventListener("input", ()=>{
+  if(!M.surahs) return;
+  const p = +$("mSlider").value;
+  $("mTip").textContent = surahForPage(p).name+" · صفحة "+fmt(p);
+  $("mTip").classList.add("on");
+  clearTimeout(tipT); tipT = setTimeout(()=>$("mTip").classList.remove("on"), 1400);
+});
+$("mSlider").addEventListener("change", ()=>{
+  hideAyBar(); $("mTip").classList.remove("on");
+  renderPage(+$("mSlider").value);
+});
 /* ---------- التنقل ---------- */
 $("mPrev").addEventListener("click", ()=>{
   hideAyBar();
@@ -2703,9 +2839,9 @@ $("btnMushaf").addEventListener("click", async ()=>{
   loadRecitations().catch(()=>{});
   loadTafsirs().catch(()=>{});
   try{
-    if(!localStorage.getItem("amalan:hint2")){
-      localStorage.setItem("amalan:hint2","1");
-      setTimeout(()=>showToast("💡 المس أي آية تظهر أدواتها في الأسفل — والمس حافة الصفحة لتقليبها"), 900);
+    if(!localStorage.getItem("amalan:hint3")){
+      localStorage.setItem("amalan:hint3","1");
+      setTimeout(()=>showToast("💡 اضغط مطوّلاً على أي آية لفتح أدواتها — والمس حافة الصفحة لتقليبها"), 900);
     }
   }catch(e){}
 });
