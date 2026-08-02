@@ -474,12 +474,11 @@ html.dark .q-a.playing{box-shadow:0 0 0 1.5px rgba(201,196,142,.5)}
   font-variant-numeric:tabular-nums;line-height:1;padding:0 4px}
 .qc1{background:rgba(240,203,70,.30)} .qc2{background:rgba(125,195,125,.28)}
 .qc3{background:rgba(122,165,235,.28)} .qc4{background:rgba(238,145,165,.28)} .qc5{background:rgba(195,145,238,.28)}
-.qc6{background:rgba(95,200,190,.28)} .qc7{background:rgba(240,160,90,.30)} .qc8{background:rgba(160,160,160,.30)}
+.qc6{background:rgba(95,200,190,.28)} .qc8{background:rgba(160,160,160,.30)}
 html.dark .qc1{background:rgba(240,203,70,.22)} html.dark .qc2{background:rgba(125,195,125,.22)}
 html.dark .qc3{background:rgba(122,165,235,.24)} html.dark .qc4{background:rgba(238,145,165,.24)}
 html.dark .qc5{background:rgba(195,145,238,.24)}
-html.dark .qc6{background:rgba(95,200,190,.24)} html.dark .qc7{background:rgba(240,160,90,.24)}
-html.dark .qc8{background:rgba(170,170,170,.26)}
+html.dark .qc6{background:rgba(95,200,190,.24)} html.dark .qc8{background:rgba(170,170,170,.26)}
 .q-mark{position:relative}
 .q-mark::after{content:"🔖";font-size:12px;margin-inline-start:2px}
 .q-sur-head{margin:16px auto 6px;max-width:430px;text-align:center;border:1.5px solid rgba(110,108,68,.5);
@@ -511,7 +510,7 @@ html.dark .ay-c{border-color:rgba(255,255,255,.18)}
 .ay-c:active{transform:scale(.88)}
 .ay-c.c1{background:#EFCB46}.ay-c.c2{background:#7DC37D}.ay-c.c3{background:#7AA5EB}
 .ay-c.c4{background:#EE91A5}.ay-c.c5{background:#C391EE}
-.ay-c.c6{background:#5FC8BE}.ay-c.c7{background:#F0A05A}.ay-c.c8{background:#A8A8A8}
+.ay-c.c6{background:#5FC8BE}.ay-c.c8{background:#A8A8A8}
 .ay-c.c0{background:transparent;display:grid;place-items:center;color:var(--muted);font-size:17px;border-style:dashed}
 .ay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .ay-grid .btn{height:52px;font-size:13px;flex-direction:column;gap:3px;display:flex;align-items:center;justify-content:center}
@@ -566,7 +565,7 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 .ab-taf .tafs-text{max-height:34vh}
 .qs-panel{overflow:hidden;max-height:0;padding:0 14px;background:var(--bg1);
   transition:max-height .4s var(--ease), padding .3s;position:absolute;left:0;right:0;z-index:82;
-  top:calc(54px + env(safe-area-inset-top));box-shadow:0 18px 40px rgba(0,0,0,.18)}
+  top:calc(62px + env(safe-area-inset-top));box-shadow:0 18px 40px rgba(0,0,0,.18)}
 .qs-panel.open{max-height:62vh;padding:10px 14px;border-bottom:1px solid var(--card-b)}
 .qs-panel input{width:100%;height:42px;border-radius:13px;border:1px solid var(--card-b);
   background:var(--card);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;padding:0 13px;outline:none}
@@ -589,12 +588,12 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
   box-shadow:inset 0 0 0 5px var(--bg0), inset 0 0 0 6px rgba(110,108,68,.35)}
 html.dark .q-page15.centered .q-page-inner15{border-color:rgba(201,196,142,.55);background:rgba(201,196,142,.06);
   box-shadow:inset 0 0 0 5px var(--bg0), inset 0 0 0 6px rgba(201,196,142,.35)}
-.q-line{display:flex;justify-content:space-between;align-items:center;direction:rtl;
+.q-line{display:flex;justify-content:space-between;align-items:baseline;direction:rtl;
   font-size:var(--qfs, clamp(15px,5.2vw,29px));line-height:1.72;color:var(--ink);white-space:nowrap;
   padding:0 2px;min-height:1.72em}
 .q-line.qcen{justify-content:center;gap:.3em}
 /* الآية ككتلة واحدة متصلة — التظليل يشمل الآية كاملة */
-.q-run{display:flex;justify-content:space-between;align-items:center;padding:.06em .12em;
+.q-run{display:flex;justify-content:space-between;align-items:baseline;padding:.06em .12em;
   border-radius:.28em;transition:background .4s var(--ease),box-shadow .4s var(--ease)}
 .q-run .qg,.q-lprun .qg{font-style:normal;display:inline-block}
 .q-run .qend,.q-lprun .qend{color:var(--gold-hi)}
@@ -911,8 +910,7 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
         <span class="ay-c c1" data-c="1"></span><span class="ay-c c2" data-c="2"></span>
         <span class="ay-c c3" data-c="3"></span><span class="ay-c c4" data-c="4"></span>
         <span class="ay-c c5" data-c="5"></span><span class="ay-c c6" data-c="6"></span>
-        <span class="ay-c c7" data-c="7"></span><span class="ay-c c8" data-c="8"></span>
-        <span class="ay-c c0" data-c="0">⌀</span>
+        <span class="ay-c c8" data-c="8"></span><span class="ay-c c0" data-c="0">⌀</span>
       </div>
     </div>
     <div class="ab-main">
@@ -2363,7 +2361,7 @@ function lineRunsHTML(L, fam){
     }
     const g=sg.g[0], ch=String.fromCodePoint(g[0]);
     if(sg.t==="s") return '<span class="q-sh">'+ch+'</span>';
-    if(sg.t==="b") return '<span class="q-bs" style="font-family:\''+fam+'\'">'+ch+'</span>';
+    if(sg.t==="b") return '<span class="q-bs" style="font-family:\''+fam+'\'">\uF8DD</span>';
     return '<span class="q-orn"'+(g[1]===1?'':' style="font-family:\''+fam+'\'"')+'>'+ch+'</span>';
   }).join('');
 }
@@ -2402,7 +2400,7 @@ let lastPageN = 0;
 async function renderPageAuthentic(p){
   const data = await loadQcfData();
   const pg = data[p-1];
-  const needQb = pg.l.some(L=>L.some(g=>g[1]===1));
+  const needQb = pg.l.some(L=>L.some(g=>g[1]===1 || g[2]==="b" || g[2]==="s"));
   const loads=[ensureQcfFont(pg.f)]; if(needQb) loads.push(ensureQcfFont("QCF4_QBSML"));
   await Promise.all(loads);
   if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
@@ -2610,7 +2608,8 @@ async function loadTafsirs(){
       localStorage.setItem("amalan:tafs", JSON.stringify(list));
     }catch(e){ list = []; }
   }
-  M.tafsirs = list;
+  M.tafsirs = [{id:"mk", name:"المختصر في التفسير"}].concat(list);
+  list = M.tafsirs;
   if(!M.prefs.tafsir && list.length){
     const d = list.find(t=>t.name.includes("ميسر")) || list.find(t=>t.name.includes("كثير")) || list[0];
     M.prefs.tafsir = d.id; savePrefs();
@@ -2619,22 +2618,36 @@ async function loadTafsirs(){
   list.forEach(t=>{ const o=document.createElement("option"); o.value=t.id; o.textContent=t.name; sel.appendChild(o); });
   sel.value = M.prefs.tafsir;
 }
+async function tafsirText(tid, key){
+  const ck = tid+"|"+key;
+  if(M.tafCache[ck]) return M.tafCache[ck];
+  let t = "";
+  if(tid==="mk"){
+    const su = key.split(":")[0], ay = key.split(":")[1];
+    const j = await fetch("https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/ar-tafsir-al-mukhtasar/"+su+"/"+ay+".json").then(r=>r.json());
+    t = (j.text||"").trim();
+  } else {
+    const j = await fetch("https://api.quran.com/api/v4/tafsirs/"+tid+"/by_ayah/"+key).then(r=>r.json());
+    t = (j.tafsir && j.tafsir.text) || "";
+  }
+  t = t.replace(/<script[\s\S]*?<\/script>/gi,"");
+  M.tafCache[ck] = t;
+  return t;
+}
 async function fillTafsir(key){
   await loadTafsirs();
   const tid = M.prefs.tafsir;
-  const ck = tid+"|"+key;
   const box = $("tafText");
-  if(M.tafCache[ck]){ box.innerHTML = M.tafCache[ck]; return; }
   box.textContent = "…جارٍ إحضار التفسير";
   try{
-    const j = await fetch("https://api.quran.com/api/v4/tafsirs/"+tid+"/by_ayah/"+key).then(r=>r.json());
-    let t = (j.tafsir && j.tafsir.text) || "لا يتوفر تفسير لهذه الآية في هذا الكتاب.";
-    t = t.replace(/<script[\s\S]*?<\/script>/gi,"");
-    M.tafCache[ck] = t; box.innerHTML = t;
+    const t = await tafsirText(tid, key);
+    box.innerHTML = t || "لا يتوفر تفسير لهذه الآية في هذا الكتاب.";
   }catch(e){ box.textContent = "تعذّر إحضار التفسير — تحقق من الاتصال"; }
 }
 $("tafSel").addEventListener("change", ()=>{
-  M.prefs.tafsir = +$("tafSel").value; savePrefs();
+  const v = $("tafSel").value;
+  M.prefs.tafsir = (v==="mk") ? "mk" : +v;
+  savePrefs();
   if(M.sel) fillTafsir(M.sel);
 });
 
@@ -2714,13 +2727,9 @@ $("abCopy").addEventListener("click", async ()=>{
   let tafPart = "";
   try{
     await loadTafsirs();
-    const tid = M.prefs.tafsir, ck = tid+"|"+key;
-    if(!M.tafCache[ck]){
-      const j = await fetch("https://api.quran.com/api/v4/tafsirs/"+tid+"/by_ayah/"+key).then(r=>r.json());
-      let t = (j.tafsir && j.tafsir.text) || "";
-      M.tafCache[ck] = t.replace(/<script[\s\S]*?<\/script>/gi,"");
-    }
-    const tmp = document.createElement("div"); tmp.innerHTML = M.tafCache[ck];
+    const tid = M.prefs.tafsir;
+    await tafsirText(tid, key);
+    const tmp = document.createElement("div"); tmp.innerHTML = M.tafCache[tid+"|"+key]||"";
     const plain = (tmp.textContent||"").trim();
     const book = (M.tafsirs.find(t=>t.id===M.prefs.tafsir)||{}).name || "التفسير";
     if(plain) tafPart = "\n\n"+book+":\n"+plain;
@@ -2812,8 +2821,22 @@ function qNorm(s){
 function ensureNorm(){ if(!M.normArr) M.normArr = M.flat.map(o=>qNorm(o.text)); }
 let qsTimer = null;
 function doSearch(){
-  const q = qNorm($("qsInput").value||"");
+  const raw = ($("qsInput").value||"").trim();
+  const q = qNorm(raw);
   const box = $("qsRes");
+  /* البحث برقم الصفحة مباشرة */
+  const digits = raw.replace(/[٠-٩]/g, d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  if(/^\d{1,3}$/.test(digits)){
+    const pn = +digits;
+    if(pn>=1 && pn<=604){
+      box.innerHTML = "";
+      const d = document.createElement("div"); d.className = "qs-item";
+      d.innerHTML = '<div class="w">↪ الانتقال إلى الصفحة '+fmt(pn)+'</div><div class="rf">'+ (M.surahs? "سورة "+surahForPage(pn).name : "") +'</div>';
+      d.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); renderPage(pn); });
+      box.appendChild(d);
+      return;
+    }
+  }
   if(q.length<2){ renderMarksList(); return; }
   ensureNorm();
   const out = [];
@@ -2867,9 +2890,9 @@ function slTick(){
     tickCtx = tickCtx || new (window.AudioContext||window.webkitAudioContext)();
     if(tickCtx.state==="suspended") tickCtx.resume();
     const t=tickCtx.currentTime, o=tickCtx.createOscillator(), g=tickCtx.createGain();
-    o.type="sine"; o.frequency.setValueAtTime(1250,t);
-    g.gain.setValueAtTime(0.016,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
-    o.connect(g); g.connect(tickCtx.destination); o.start(t); o.stop(t+0.055);
+    o.type="sine"; o.frequency.setValueAtTime(820,t);
+    g.gain.setValueAtTime(0.005,t); g.gain.exponentialRampToValueAtTime(0.00008,t+0.06);
+    o.connect(g); g.connect(tickCtx.destination); o.start(t); o.stop(t+0.065);
   }catch(e){}
 }
 let tipT=null;
