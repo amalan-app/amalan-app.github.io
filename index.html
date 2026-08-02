@@ -231,12 +231,13 @@ html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
 .sw.on::after{inset-inline-start:23px;background:var(--gold-hi)}
 
 /* ======== توست ======== */
-.toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-140%);
+.toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,calc(-100% - 140px));
+  opacity:0;pointer-events:none;
   z-index:60;background:rgba(245,241,231,.92);border:1px solid rgba(110,108,68,.35);color:var(--gold-hi);
   font-family:var(--f-display);font-size:16px;padding:11px 22px;border-radius:20px;
   box-shadow:0 12px 40px rgba(90,88,55,.16), 0 0 30px rgba(110,108,68,.15);
   transition:transform .6s var(--ease);text-align:center;max-width:88vw;backdrop-filter:blur(8px)}
-.toast.show{transform:translate(-50%,0)}
+.toast.show{transform:translate(-50%,0);opacity:1}
 
 /* ======== بشارة إتمام الدورة ======== */
 .blessing{position:fixed;inset:0;z-index:55;display:flex;justify-content:center;align-items:flex-start;
