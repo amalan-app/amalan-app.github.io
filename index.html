@@ -434,13 +434,16 @@ html.dark .abtn.del-act{border-color:rgba(224,150,124,.6);background:rgba(224,15
 /* ======================== المصحف الشريف ======================== */
 .mushaf{position:fixed;inset:0;z-index:80;background:var(--bg0);display:none;flex-direction:column}
 .mushaf.open{display:flex}
-.m-hdr{display:flex;align-items:center;gap:8px;flex:0 0 auto;
-  padding:max(10px,env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--card-b);background:var(--bg1)}
+.m-hdr{display:flex;align-items:center;gap:8px;position:absolute;top:0;left:0;right:0;z-index:83;
+  padding:max(10px,env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--card-b);background:var(--bg1);
+  transition:transform .38s var(--ease),opacity .38s var(--ease)}
+.mushaf.zen .m-hdr{transform:translateY(-110%);opacity:0;pointer-events:none}
 .m-title{flex:1;text-align:center;min-width:0}
 .m-title .s{font-family:var(--f-display);font-size:18px;color:var(--gold-hi);font-weight:700;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m-title .i{font-size:11px;color:var(--muted);margin-top:1px}
-.m-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(140px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+.m-view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:max(8px,env(safe-area-inset-top)) 8px calc(10px + env(safe-area-inset-bottom));overscroll-behavior:contain}
 .m-view.lock{overflow:hidden;touch-action:pan-x;overscroll-behavior:none}
 .m-load{text-align:center;color:var(--muted);font-size:14.5px;line-height:2;padding-top:22vh}
 .m-load .big{font-family:var(--f-display);font-size:22px;color:var(--gold-hi)}
@@ -478,12 +481,14 @@ html.dark .q-sur-head{border-color:rgba(201,196,142,.5)}
 .q-sur-head .n{font-family:var(--f-display);font-size:21px;font-weight:700;color:var(--gold-hi)}
 .q-sur-head .m{font-size:11px;color:var(--muted);margin-top:1px}
 .q-bsm{font-family:'Amiri Quran','Amiri',serif;text-align:center;font-size:25px;margin:8px 0 4px;color:var(--ink)}
-.m-nav{flex:0 0 auto;display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;
-  padding:9px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--card-b);background:var(--bg1)}
+.m-nav{position:absolute;bottom:0;left:0;right:0;z-index:83;display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;
+  padding:9px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--card-b);background:var(--bg1);
+  transition:transform .38s var(--ease),opacity .38s var(--ease)}
+.mushaf.zen .m-nav{transform:translateY(110%);opacity:0;pointer-events:none}
 .m-sel{height:38px;border-radius:12px;border:1px solid var(--card-b);background:var(--card);
   color:var(--ink);font-family:var(--f-ui);font-size:13px;padding:0 10px;max-width:150px;outline:none}
 .m-nav .tool{height:38px}
-.q-audio{position:fixed;left:12px;right:12px;bottom:calc(66px + env(safe-area-inset-bottom));z-index:84;
+.q-audio{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:84;
   display:none;align-items:center;gap:9px;padding:10px 13px;border-radius:16px;background:var(--bg2);
   border:1px solid var(--card-b);box-shadow:0 12px 34px rgba(0,0,0,.28);max-width:560px;margin:0 auto}
 .q-audio.on{display:flex}
@@ -530,7 +535,7 @@ html.dark .ay-c{border-color:rgba(255,255,255,.18)}
 /* ======== المصحف ٢٫٠ — تفاعل سلس بلا نوافذ ======== */
 .q-a.sel{background:var(--gold-dim);box-shadow:0 0 0 1.5px rgba(110,108,68,.45)}
 html.dark .q-a.sel{box-shadow:0 0 0 1.5px rgba(201,196,142,.45)}
-.ay-bar{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:86;
+.ay-bar{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:86;
   max-width:560px;margin:0 auto;background:var(--bg2);border:1px solid var(--card-b);border-radius:18px;
   box-shadow:0 16px 44px rgba(0,0,0,.3);padding:11px 13px;
   transform:translateY(130%);opacity:0;pointer-events:none;
@@ -557,18 +562,22 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 .ab-taf .m-sel{width:100%;max-width:none;margin-bottom:8px;height:36px}
 .ab-taf .tafs-text{max-height:34vh}
 .qs-panel{overflow:hidden;max-height:0;padding:0 14px;background:var(--bg1);
-  transition:max-height .4s var(--ease), padding .3s;flex:0 0 auto}
+  transition:max-height .4s var(--ease), padding .3s;position:absolute;left:0;right:0;z-index:82;
+  top:calc(54px + env(safe-area-inset-top));box-shadow:0 18px 40px rgba(0,0,0,.18)}
 .qs-panel.open{max-height:62vh;padding:10px 14px;border-bottom:1px solid var(--card-b)}
 .qs-panel input{width:100%;height:42px;border-radius:13px;border:1px solid var(--card-b);
   background:var(--card);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;padding:0 13px;outline:none}
 .qs-panel .qs-res{max-height:48vh;overflow-y:auto;margin-top:6px;-webkit-overflow-scrolling:touch}
 
 
-/* ======== صفحة المصحف المطبوع — ١٥ سطراً بخط مجمع الملك فهد (الإصدار الرابع) ======== */
-.q-page15{margin-bottom:0}
-.q-page15 .q-page-inner15{border:1px solid rgba(110,108,68,.25);border-radius:12px;
-  padding:10px 9px;display:flex;flex-direction:column;justify-content:space-between}
-html.dark .q-page15 .q-page-inner15{border-color:rgba(201,196,142,.25)}
+/* ======== صفحة المصحف المطبوع — ملء الشاشة بلا إطارات ======== */
+.q-page15{margin:0 auto;padding:0;border:none;background:transparent;max-width:680px;
+  display:flex;flex-direction:column;min-height:100%}
+.q-phead{display:flex;justify-content:space-between;align-items:center;direction:rtl;
+  font-family:var(--f-display);font-size:12.5px;color:var(--muted);padding:2px 6px 4px;flex:0 0 auto}
+.q-phead b{color:var(--gold-hi);font-weight:700}
+.q-page15 .q-page-inner15{border:none;padding:2px 4px;display:flex;flex-direction:column;justify-content:space-between}
+.q-page15 .q-pnum{margin-top:4px}
 .q-page15.centered .q-page-inner15{justify-content:center;gap:.35em}
 .q-line{display:flex;justify-content:space-between;align-items:center;direction:rtl;
   font-size:var(--qfs, clamp(15px,5.2vw,29px));line-height:1.72;color:var(--ink);white-space:nowrap;
@@ -585,9 +594,8 @@ html.dark .q-page15 .q-page-inner15{border-color:rgba(201,196,142,.25)}
 .qmk{box-shadow:inset 0 -2.5px 0 rgba(110,108,68,.55)}
 html.dark .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
 /* ======== وضع الحروف الكبيرة (تكبير الخط) ======== */
-.q-lp .q-lp-inner{border:1px solid rgba(110,108,68,.25);border-radius:12px;padding:14px 12px;
-  direction:rtl;color:var(--ink)}
-html.dark .q-lp .q-lp-inner{border-color:rgba(201,196,142,.25)}
+.q-lp{margin:0 auto;padding:0;border:none;background:transparent;max-width:680px}
+.q-lp .q-lp-inner{border:none;padding:6px 4px;direction:rtl;color:var(--ink)}
 .q-lptxt{direction:rtl;text-align:right;line-height:2.05;letter-spacing:.5px;word-break:keep-all}
 .q-lprun{border-radius:.26em;padding:.05em .1em;transition:background .4s var(--ease),box-shadow .4s var(--ease);
   cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -2363,10 +2371,10 @@ function fitPage(){
   const mv=$("mView"), inner=mv.querySelector(".q-page-inner15");
   if(!inner) return;
   const cs=getComputedStyle(mv);
-  const avail = mv.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 48;
-  const w = inner.clientWidth - 20;
+  const avail = mv.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 52;
+  const w = inner.clientWidth - 6;
   const lines = Math.max(inner.children.length, 8);
-  const fs = Math.min(w*0.0545, avail/lines/1.74);
+  const fs = Math.min(w*0.0555, avail/lines/1.74);
   inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
   inner.style.height = Math.max(avail, 200)+"px";
   /* ضمانة: إن تجاوز أعرض سطر عرض الصفحة يُصغَّر الخط تلقائياً — لا تمرير جانبي أبداً */
@@ -2392,7 +2400,10 @@ async function renderPageAuthentic(p){
   if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
   const dir = (p>=lastPageN) ? "-14px" : "14px"; lastPageN = p;
   if((M.prefs.zoom||1)>1.01){ renderLargePrint(p, pg, dir); return; }
-  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+'" style="--pgx:'+dir+'"><div class="q-page-inner15">';
+  const list = (M.byPage||{})[p]||[];
+  const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
+  const phead = '<div class="q-phead"><b>'+(names?"سُورَةُ "+names:"")+'</b><span>الجزء '+fmt(list.length?list[0].juz:1)+'</span></div>';
+  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+'" style="--pgx:'+dir+'">'+phead+'<div class="q-page-inner15">';
   pg.l.forEach(L=>{
     const center = p<=2 || L.some(g=>g[2]==="s"||g[2]==="b");
     h += '<div class="q-line'+(center?' qcen':'')+'">'+lineRunsHTML(L, pg.f)+'</div>';
@@ -2662,6 +2673,7 @@ function syncAyBar(){
 }
 function selectAyah(key){
   M.sel = key;
+  $("mushaf").classList.add("zen");
   $("mView").querySelectorAll(".q-a.sel").forEach(e=>e.classList.remove("sel"));
   $("mView").querySelectorAll('[data-k="'+key+'"]').forEach(el=>el.classList.add("sel"));
   syncAyBar();
@@ -2776,17 +2788,16 @@ mvEl.addEventListener("click", e=>{
   if($("ayBar").classList.contains("open")){ hideAyBar(); return; }
   const ay = e.target.closest(".q-a");
   if(ay){
-    /* لمسة سريعة: تمييز لحظي فقط — الأدوات بالضغطة المطوّلة */
+    /* لمسة سريعة: تمييز لحظي — والأدوات بالضغطة المطوّلة */
     $("mView").querySelectorAll('[data-k="'+ay.dataset.k+'"]').forEach(el=>{
       el.classList.add("tapsel"); setTimeout(()=>el.classList.remove("tapsel"), 700);
     });
-    return;
   }
   if($("qsPanel").classList.contains("open")){ $("qsPanel").classList.remove("open"); return; }
-  if(M.prefs.mode!=="pages") return;
   const r = mvEl.getBoundingClientRect(), x = e.clientX - r.left, w = r.width;
   if(x < w*0.26) renderPage(M.prefs.page+1);
   else if(x > w*0.74) renderPage(M.prefs.page-1);
+  else $("mushaf").classList.toggle("zen"); /* لمسة المنتصف: إظهار وإخفاء الأدوات */
 });
 /* سحب لتقليب الصفحات / السور */
 let tX=null, tY=null;
@@ -2900,6 +2911,7 @@ $("mBackChip").addEventListener("click", ()=>{
 /* ---------- فتح وإغلاق ---------- */
 $("btnMushaf").addEventListener("click", async ()=>{
   $("mushaf").classList.add("open");
+  $("mushaf").classList.add("zen"); /* صفحة صافية — الأدوات بلمسة المنتصف */
   loadQcfData().catch(()=>{}); /* تهيئة بيانات المصحف المطبوع مبكراً */
   const ok = await ensureQuran();
   if(!ok) return;
@@ -2911,7 +2923,7 @@ $("btnMushaf").addEventListener("click", async ()=>{
   try{
     if(!localStorage.getItem("amalan:hint3")){
       localStorage.setItem("amalan:hint3","1");
-      setTimeout(()=>showToast("💡 اضغط مطوّلاً على أي آية لفتح أدواتها — والمس حافة الصفحة لتقليبها"), 900);
+      setTimeout(()=>showToast("💡 المس منتصف الصفحة لإظهار الأدوات وإخفائها · الحواف تقلّب الصفحات · ضغطة مطوّلة على الآية لأدواتها"), 900);
     }
   }catch(e){}
 });
