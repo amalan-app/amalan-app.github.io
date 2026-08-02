@@ -48,7 +48,8 @@ body{
 @keyframes grainShift{0%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-5%)}60%{transform:translate(-5%,-2%)}80%{transform:translate(4%,4%)}100%{transform:translate(0,0)}}
 
 .app{position:relative;z-index:2;max-width:520px;margin:0 auto;height:100dvh;
-  display:flex;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 18px calc(12px + env(safe-area-inset-bottom));}
+  display:flex;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 18px calc(12px + env(safe-area-inset-bottom));
+  overflow-y:auto;overflow-x:hidden}
 
 /* ======== خلفية الذكر المخصصة ======== */
 .bg-layer{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;
@@ -94,9 +95,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
 .active-dhikr .hint::after{background:linear-gradient(-90deg,transparent,var(--faint))}
 
 /* ======== العدّاد الدائري ======== */
-.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;position:relative}
-.tap-zone{position:relative;width:min(78vw,320px);aspect-ratio:1;cursor:pointer;touch-action:manipulation;
-  display:grid;place-items:center;border-radius:50%;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:190px;position:relative}
+.tap-zone{position:relative;height:min(78vw,320px);max-height:100%;aspect-ratio:1;cursor:pointer;touch-action:manipulation;
+  display:grid;place-items:center;border-radius:50%;flex:0 1 auto;min-height:150px}
 .tap-zone svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .ring-track{fill:none;stroke:rgba(110,108,68,.15);stroke-width:7}
 .ring-fill{fill:none;stroke:url(#goldGrad);stroke-width:7;stroke-linecap:round;
@@ -123,7 +124,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
   box-shadow:0 0 6px rgba(110,108,68,.5)}
 
 /* خيط السبحة — كل دورة مكتملة خرزة */
-.beads{display:flex;align-items:center;justify-content:center;gap:7px;min-height:26px;margin-top:14px;
+.beads{display:flex;align-items:center;justify-content:center;gap:7px;min-height:24px;margin-top:8px;
   flex-wrap:wrap;max-width:320px}
 .bead{width:11px;height:11px;border-radius:50%;
   background:radial-gradient(circle at 32% 30%, var(--gold-hi), var(--gold) 55%, #3E3C22);
@@ -134,8 +135,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
 .beads .empty-line{width:120px;height:1px;background:linear-gradient(90deg,transparent,rgba(110,108,68,.30),transparent)}
 
 /* ======== شريط الأدوات أسفل العدّاد ======== */
-.tools{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap}
-.tools-main{margin-top:10px}
+.tools{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:10px;flex-wrap:wrap}
+.tools-main{margin-top:8px}
 .tools-main .tool{flex:1 1 auto;max-width:220px;justify-content:center;height:46px;border-radius:23px;
   font-size:14px;font-weight:700;color:var(--gold-hi);border-color:rgba(110,108,68,.4);background:var(--card)}
 html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
@@ -145,7 +146,7 @@ html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
 .tool:active{transform:scale(.94);color:var(--gold);border-color:var(--gold-dim)}
 
 /* ======== شريط الإحصاءات ======== */
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
 .stat{background:var(--card);border:1px solid var(--card-b);border-radius:16px;padding:9px 6px;text-align:center;
   transition:transform .3s var(--ease)}
 .stat .v{font-family:var(--f-display);font-weight:700;font-size:20px;color:var(--gold-hi);font-variant-numeric:tabular-nums;line-height:1.2}
@@ -598,6 +599,22 @@ html.dark .q-page15.centered .q-page-inner15{border-color:rgba(201,196,142,.55);
 .q-run .qg,.q-lprun .qg{font-style:normal;display:inline-block}
 .q-run .qend,.q-lprun .qend{color:var(--gold-hi)}
 .q-sh{font-family:'QCF4_QBSML';font-size:1.34em;color:var(--gold-hi);line-height:1.3}
+/* برواز اسم السورة — كزخرفة مصحف المدينة */
+.q-line.q-shline{position:relative;margin:.1em .05em;padding:.12em 1.4em;border-radius:9px;
+  border:1.5px solid rgba(110,108,68,.55);
+  background:linear-gradient(180deg, rgba(110,108,68,.12), rgba(110,108,68,.045) 55%, rgba(110,108,68,.10));
+  box-shadow:inset 0 0 0 2.5px var(--bg0), inset 0 0 0 4px rgba(110,108,68,.4)}
+.q-line.q-shline .q-sh{font-size:1.18em}
+.q-line.q-shline::before,.q-line.q-shline::after{content:"";position:absolute;top:50%;width:.55em;height:.55em;
+  transform:translateY(-50%) rotate(45deg);border:1.5px solid rgba(110,108,68,.55);border-radius:2px;
+  background:radial-gradient(circle at 35% 35%, var(--bg0) 30%, rgba(110,108,68,.30))}
+.q-line.q-shline::before{right:.42em}
+.q-line.q-shline::after{left:.42em}
+html.dark .q-line.q-shline{border-color:rgba(201,196,142,.5);
+  background:linear-gradient(180deg, rgba(201,196,142,.13), rgba(201,196,142,.05) 55%, rgba(201,196,142,.11));
+  box-shadow:inset 0 0 0 2.5px var(--bg0), inset 0 0 0 4px rgba(201,196,142,.38)}
+html.dark .q-line.q-shline::before,html.dark .q-line.q-shline::after{border-color:rgba(201,196,142,.5);
+  background:radial-gradient(circle at 35% 35%, var(--bg0) 30%, rgba(201,196,142,.3))}
 .q-bs{font-size:1.06em}
 .q-orn{font-family:'QCF4_QBSML';color:var(--gold-hi)}
 .qmk{box-shadow:inset 0 -2.5px 0 rgba(110,108,68,.55)}
@@ -2410,8 +2427,9 @@ async function renderPageAuthentic(p){
   const phead = '<div class="q-phead"><b>'+(names?"سُورَةُ "+names:"")+'</b><span>الجزء '+fmt(list.length?list[0].juz:1)+'</span></div>';
   let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+'" style="--pgx:'+dir+'">'+phead+'<div class="q-page-inner15">';
   pg.l.forEach(L=>{
-    const center = p<=2 || L.some(g=>g[2]==="s"||g[2]==="b");
-    h += '<div class="q-line'+(center?' qcen':'')+'">'+lineRunsHTML(L, pg.f)+'</div>';
+    const hasS = L.some(g=>g[2]==="s");
+    const center = p<=2 || hasS || L.some(g=>g[2]==="b");
+    h += '<div class="q-line'+(center?' qcen':'')+(hasS?' q-shline':'')+'">'+lineRunsHTML(L, pg.f)+'</div>';
   });
   h += '</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
   $("mView").innerHTML = h;
