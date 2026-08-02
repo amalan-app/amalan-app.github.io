@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#F1ECE0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="أملآ">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -1309,6 +1309,8 @@ function armRemind(reset){
 }
 function fireRemind(){
   if(document.hidden){ remindTimer = setTimeout(fireRemind, 30000); return; }
+  const mEl = document.getElementById("mushaf");
+  if(mEl && mEl.classList.contains("open")){ remindTimer = setTimeout(fireRemind, 60000); return; }
   const d = active();
   if(d.target>0 && d.cycle<=0) return; /* أتم الجولة أو لم يبدأ — لا داعي للتذكير */
   remindEl.classList.add("show");
