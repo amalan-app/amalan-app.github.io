@@ -135,6 +135,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
 
 /* ======== شريط الأدوات أسفل العدّاد ======== */
 .tools{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.tools-main{margin-top:10px}
+.tools-main .tool{flex:1 1 auto;max-width:220px;justify-content:center;height:46px;border-radius:23px;
+  font-size:14px;font-weight:700;color:var(--gold-hi);border-color:rgba(110,108,68,.4);background:var(--card)}
+html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
 .tool{height:40px;padding:0 16px;border-radius:20px;border:1px solid var(--card-b);background:var(--card);
   color:var(--muted);font-family:var(--f-ui);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;
   transition:all .3s var(--ease)}
@@ -631,8 +635,6 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
   <header class="reveal d1">
     <div class="hdr-actions">
       <button class="icon-btn" id="btnList" aria-label="قائمة الأذكار">☰</button>
-      <button class="icon-btn" id="btnMushaf" aria-label="المصحف"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 5.2C10.4 3.9 8.2 3.2 5.6 3.2c-.9 0-1.7.08-2.6.25V18.6c.9-.17 1.7-.25 2.6-.25 2.6 0 4.8.7 6.4 2 1.6-1.3 3.8-2 6.4-2 .9 0 1.7.08 2.6.25V3.45a13.6 13.6 0 0 0-2.6-.25c-2.6 0-4.8.7-6.4 2Z"/><path d="M12 5.2v15.15"/><path d="M7.6 8.4c.9-.5 1.6-.5 2.4 0M7.6 11.4c.9-.5 1.6-.5 2.4 0M14 8.4c.9-.5 1.6-.5 2.4 0M14 11.4c.9-.5 1.6-.5 2.4 0"/></svg></button>
-      <button class="icon-btn" id="btnShareApp" aria-label="مشاركة التطبيق">⤴</button>
     </div>
     <div class="brand">
       <h1>أملآ</h1>
@@ -673,8 +675,11 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
     <div class="tools">
       <button class="tool" id="btnUndo">↶ تراجع</button>
       <button class="tool" id="btnReset">⟲ تصفير</button>
-      <button class="tool" id="btnRadio">📻 الإذاعة</button>
       <button class="tool" id="btnNext">الذكر التالي ›</button>
+    </div>
+    <div class="tools tools-main">
+      <button class="tool gold" id="btnRadio">📻 الإذاعة</button>
+      <button class="tool gold" id="btnMushaf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 5.2C10.4 3.9 8.2 3.2 5.6 3.2c-.9 0-1.7.08-2.6.25V18.6c.9-.17 1.7-.25 2.6-.25 2.6 0 4.8.7 6.4 2 1.6-1.3 3.8-2 6.4-2 .9 0 1.7.08 2.6.25V3.45a13.6 13.6 0 0 0-2.6-.25c-2.6 0-4.8.7-6.4 2Z"/><path d="M12 5.2v15.15"/><path d="M7.6 8.4c.9-.5 1.6-.5 2.4 0M7.6 11.4c.9-.5 1.6-.5 2.4 0M14 8.4c.9-.5 1.6-.5 2.4 0M14 11.4c.9-.5 1.6-.5 2.4 0"/></svg> المصحف الشريف</button>
     </div>
   </div>
 
@@ -770,6 +775,7 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <div class="sw" id="swArabicNums"></div>
     </div>
     <div class="modal-actions">
+      <button class="btn ghost" id="btnShareApp">📤 مشاركة التطبيق وتثبيته</button>
       <button class="btn ghost" data-close="settingsModal">تم</button>
     </div>
   </div>
@@ -2165,7 +2171,7 @@ let installEv = null;
 window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); installEv = e; });
 const APP_URL = "https://amalan-app.github.io";
 const IS_STANDALONE = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-$("btnShareApp").addEventListener("click", ()=>openLayer("shareModal"));
+$("btnShareApp").addEventListener("click", ()=>{ closeLayer("settingsModal"); openLayer("shareModal"); });
 $("shareAppBtn").addEventListener("click", async ()=>{
   const data = {title:"أملآ", text:"أملآ — عدّاد الباقيات الصالحات والمصحف الشريف بالتفاسير والتلاوات ومواقيت الصلاة، مجاناً", url:APP_URL};
   try{
