@@ -517,6 +517,43 @@ html.dark .ay-c{border-color:rgba(255,255,255,.18)}
   cursor:pointer;display:none;box-shadow:0 8px 22px rgba(0,0,0,.2)}
 .m-back-chip.on{display:block}
 
+
+/* ======== المصحف ٢٫٠ — تفاعل سلس بلا نوافذ ======== */
+.q-a.sel{background:var(--gold-dim);box-shadow:0 0 0 1.5px rgba(110,108,68,.45)}
+html.dark .q-a.sel{box-shadow:0 0 0 1.5px rgba(201,196,142,.45)}
+.ay-bar{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:86;
+  max-width:560px;margin:0 auto;background:var(--bg2);border:1px solid var(--card-b);border-radius:18px;
+  box-shadow:0 16px 44px rgba(0,0,0,.3);padding:11px 13px;
+  transform:translateY(130%);opacity:0;pointer-events:none;
+  transition:transform .38s var(--ease), opacity .3s}
+.ay-bar.open{transform:none;opacity:1;pointer-events:auto}
+.ab-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.ab-ref{font-size:12.5px;color:var(--gold-hi);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ab-dots{display:flex;gap:7px;flex:0 0 auto}
+.ab-dots .ay-c{width:26px;height:26px;border-width:2px;font-size:13px}
+.ab-main{display:flex;gap:7px}
+.ab-btn{flex:1;height:40px;border-radius:12px;border:1px solid var(--card-b);background:var(--card);
+  color:var(--gold-hi);font-family:var(--f-ui);font-size:12.5px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:all .2s var(--ease);
+  white-space:nowrap;padding:0 6px}
+.ab-btn:active{transform:scale(.94)}
+.ab-btn.on{background:var(--gold-dim);border-color:rgba(110,108,68,.55)}
+html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
+.ab-btn.sm{flex:0 0 44px;font-size:15px}
+.ab-rec{display:flex;align-items:center;gap:8px;margin-top:9px}
+.ab-rec span{font-size:14px}
+.ab-rec .m-sel{flex:1;max-width:none;height:36px}
+.ab-taf{display:none;margin-top:10px;border-top:1px dashed var(--card-b);padding-top:10px}
+.ab-taf.open{display:block}
+.ab-taf .m-sel{width:100%;max-width:none;margin-bottom:8px;height:36px}
+.ab-taf .tafs-text{max-height:34vh}
+.qs-panel{overflow:hidden;max-height:0;padding:0 14px;background:var(--bg1);
+  transition:max-height .4s var(--ease), padding .3s;flex:0 0 auto}
+.qs-panel.open{max-height:62vh;padding:10px 14px;border-bottom:1px solid var(--card-b)}
+.qs-panel input{width:100%;height:42px;border-radius:13px;border:1px solid var(--card-b);
+  background:var(--card);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;padding:0 13px;outline:none}
+.qs-panel .qs-res{max-height:48vh;overflow-y:auto;margin-top:6px;-webkit-overflow-scrolling:touch}
+
 </style>
 </head>
 <body>
@@ -765,13 +802,19 @@ html.dark .ay-c{border-color:rgba(255,255,255,.18)}
 <!-- ======================== المصحف الشريف ======================== -->
 <div class="mushaf" id="mushaf">
   <header class="m-hdr">
-    <button class="icon-btn" id="mClose" aria-label="إغلاق">✕</button>
+    <button class="icon-btn" id="mClose" aria-label="رجوع">✕</button>
     <div class="m-title">
       <div class="s" id="mSurName">المصحف الشريف</div>
       <div class="i" id="mInfo">برواية حفص عن عاصم — نص مجمع الملك فهد</div>
     </div>
     <button class="icon-btn" id="mSearchBtn" aria-label="البحث">🔍</button>
   </header>
+
+  <div class="qs-panel" id="qsPanel">
+    <input id="qsInput" type="text" placeholder="ابحث في المصحف كاملاً…" autocomplete="off">
+    <div class="qs-res" id="qsRes"></div>
+  </div>
+
   <div class="m-view" id="mView">
     <div class="m-load" id="mLoad">
       <div class="big">﷽</div>
@@ -779,81 +822,48 @@ html.dark .ay-c{border-color:rgba(255,255,255,.18)}
       <small>يُحفَظ في جهازك فلا يحتاج تحميلاً مرة أخرى بإذن الله</small>
     </div>
   </div>
+
   <button class="m-back-chip" id="mBackChip">↩ العودة إلى موضعك السابق</button>
+
   <div class="q-audio" id="qAudio">
     <button class="qa-b" id="qaPlay">⏸</button>
     <div class="qa-i"><div class="a" id="qaAyah"></div><div class="r" id="qaRec"></div></div>
     <button class="qa-b act" id="qaCont" title="متابعة تلقائية">⏩</button>
     <button class="qa-b" id="qaStop">✕</button>
   </div>
+
+  <!-- شريط أدوات الآية — بلا نوافذ، يظهر بلمسة ويختفي بلمسة -->
+  <div class="ay-bar" id="ayBar">
+    <div class="ab-head">
+      <span class="ab-ref" id="abRef"></span>
+      <div class="ab-dots">
+        <span class="ay-c c1" data-c="1"></span><span class="ay-c c2" data-c="2"></span>
+        <span class="ay-c c3" data-c="3"></span><span class="ay-c c4" data-c="4"></span>
+        <span class="ay-c c5" data-c="5"></span><span class="ay-c c0" data-c="0">⌀</span>
+      </div>
+    </div>
+    <div class="ab-main">
+      <button class="ab-btn" id="abPlay">▶ تشغيل</button>
+      <button class="ab-btn" id="abRep">🔁 مرة</button>
+      <button class="ab-btn" id="abTafBtn">📖 تفسير</button>
+      <button class="ab-btn sm" id="abMark">🔖</button>
+      <button class="ab-btn sm" id="abCopy">⧉</button>
+    </div>
+    <div class="ab-rec">
+      <span>🎙</span><select id="recSel" class="m-sel"></select>
+    </div>
+    <div class="ab-taf" id="abTafPanel">
+      <select id="tafSel" class="m-sel"></select>
+      <div class="tafs-text" id="tafText"></div>
+    </div>
+  </div>
+
   <div class="m-nav">
     <button class="tool" id="mPrev">السابقة</button>
     <select class="m-sel" id="mSurSel"></select>
     <select class="m-sel" id="mPageSel" style="max-width:104px"></select>
     <button class="tool" id="mMode">قراءة</button>
     <button class="tool" id="mNext">التالية</button>
-  </div>
-</div>
-
-<!-- إجراءات الآية -->
-<div class="modal" id="ayModal">
-  <div class="scrim" data-close="ayModal"></div>
-  <div class="box">
-    <h3 id="ayTitle">الآية</h3>
-    <div class="ay-colors">
-      <div class="ay-c c1" data-c="1"></div><div class="ay-c c2" data-c="2"></div>
-      <div class="ay-c c3" data-c="3"></div><div class="ay-c c4" data-c="4"></div>
-      <div class="ay-c c5" data-c="5"></div><div class="ay-c c0" data-c="0">⌀</div>
-    </div>
-    <div class="rep-row">
-      <button class="tchip" data-rep="1">مرة</button>
-      <button class="tchip" data-rep="3">×٣</button>
-      <button class="tchip" data-rep="5">×٥</button>
-      <button class="tchip" data-rep="10">×١٠</button>
-    </div>
-    <div class="ay-grid">
-      <button class="btn ghost" id="ayPlay"><span class="ic">▶</span>تشغيل</button>
-      <button class="btn ghost" id="ayTafsir"><span class="ic">📖</span>التفسير</button>
-      <button class="btn ghost" id="ayRec"><span class="ic">🎙</span>القارئ</button>
-      <button class="btn ghost" id="ayMark"><span class="ic">🔖</span>علامة</button>
-      <button class="btn ghost" id="ayCopy"><span class="ic">⧉</span>نسخ</button>
-      <button class="btn ghost" data-close="ayModal"><span class="ic">✕</span>إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<!-- التفسير -->
-<div class="modal" id="tafModal">
-  <div class="scrim" data-close="tafModal"></div>
-  <div class="box">
-    <h3 id="tafTitle">التفسير</h3>
-    <div class="tafs-ref" id="tafRef"></div>
-    <select class="m-sel" id="tafSel" style="width:100%;max-width:none;margin-bottom:10px"></select>
-    <div class="tafs-text" id="tafText">…</div>
-    <div class="modal-actions"><button class="btn ghost" data-close="tafModal">إغلاق</button></div>
-  </div>
-</div>
-
-<!-- اختيار القارئ -->
-<div class="modal" id="recModal">
-  <div class="scrim" data-close="recModal"></div>
-  <div class="box">
-    <h3>اختر القارئ</h3>
-    <div class="qs-res" id="recList">…</div>
-    <div class="modal-actions"><button class="btn ghost" data-close="recModal">إغلاق</button></div>
-  </div>
-</div>
-
-<!-- البحث -->
-<div class="modal" id="qsModal">
-  <div class="scrim" data-close="qsModal"></div>
-  <div class="box">
-    <h3>البحث في المصحف</h3>
-    <div class="field" style="margin-bottom:9px">
-      <input id="qsInput" type="text" placeholder="اكتب كلمة أو جزءاً من آية…" autocomplete="off">
-    </div>
-    <div class="qs-res" id="qsRes"><div class="qs-hint">اكتب للبحث — أو ستظهر علاماتك المحفوظة هنا</div></div>
-    <div class="modal-actions"><button class="btn ghost" data-close="qsModal">إغلاق</button></div>
   </div>
 </div>
 
@@ -2079,10 +2089,10 @@ window.AMALAN = { $:$, fmt:fmt, showToast:showToast, openLayer:openLayer, closeL
 })();
 </script>
 <script>
-/* ======================== المصحف الشريف — الوحدة البرمجية ======================== */
+/* ======================== المصحف الشريف ٢٫٠ — تفاعل سلس بلا نوافذ ======================== */
 (function(){
 "use strict";
-const { $, fmt, showToast, openLayer, closeLayer, buzz } = window.AMALAN;
+const { $, fmt, showToast, buzz } = window.AMALAN;
 const QP_KEY = "amalan:quran_prefs";
 const M = {
   quran:null, surahs:null, byPage:null, flat:null, keyIdx:{},
@@ -2094,7 +2104,7 @@ const M = {
 try{ const p = JSON.parse(localStorage.getItem(QP_KEY)||"null"); if(p) Object.assign(M.prefs, p); }catch(e){}
 function savePrefs(){ try{ localStorage.setItem(QP_KEY, JSON.stringify(M.prefs)); }catch(e){} }
 
-/* ---------- تخزين IndexedDB للنص الكامل ---------- */
+/* ---------- تخزين IndexedDB ---------- */
 function idb(){ return new Promise((res,rej)=>{
   const r = indexedDB.open("amalanQuran",1);
   r.onupgradeneeded = ()=>r.result.createObjectStore("kv");
@@ -2123,7 +2133,7 @@ async function ensureQuran(){
       if(!j || j.code!==200) throw new Error("bad");
       data = j.data; await idbSet("quran-uthmani-v1", data);
     }catch(e){
-      $("mLoad").innerHTML = "تعذّر تحميل المصحف — تحقق من اتصال الإنترنت ثم أعد المحاولة";
+      $("mLoad").innerHTML = "تعذّر تحميل المصحف — تحقق من اتصال الإنترنت ثم أعد فتح المصحف";
       return false;
     }
   }
@@ -2154,7 +2164,8 @@ function refTxt(key){ const o=ayObj(key); return "سورة "+surOf(o.s).name+" �
 function ayHTML(o){
   const c = M.prefs.colors[o.key];
   const mk = M.prefs.marks.includes(o.key);
-  return '<span class="q-a'+(c?' qc'+c:'')+(mk?' q-mark':'')+(M.playing===o.key?' playing':'')+
+  return '<span class="q-a'+(c?' qc'+c:'')+(mk?' q-mark':'')+
+    (M.playing===o.key?' playing':'')+(M.sel===o.key?' sel':'')+
     '" data-k="'+o.key+'">'+esc(o.text)+' <span class="q-num">'+fmt(o.a)+'</span></span> ';
 }
 function surHeadHTML(n){
@@ -2172,7 +2183,7 @@ function renderPage(p){
   let cur = 0, buf = "";
   list.forEach(o=>{
     if(o.s!==cur){
-      if(buf) { html += '<div class="q-text">'+buf+'</div>'; buf=""; }
+      if(buf){ html += '<div class="q-text">'+buf+'</div>'; buf=""; }
       if(o.a===1) html += surHeadHTML(o.s);
       cur = o.s;
     }
@@ -2219,8 +2230,6 @@ function goToKey(key, remember){
     if(el){ el.scrollIntoView({block:"center"}); el.classList.add("jflash"); setTimeout(()=>el.classList.remove("jflash"),2300); }
   });
 }
-
-/* ---------- القوائم ---------- */
 function buildSelectors(){
   const ss = $("mSurSel"); ss.innerHTML = "";
   M.surahs.forEach(s=>{ const o=document.createElement("option"); o.value=s.n; o.textContent=fmt(s.n)+" · "+s.name; ss.appendChild(o); });
@@ -2228,7 +2237,7 @@ function buildSelectors(){
   for(let p=1;p<=604;p++){ const o=document.createElement("option"); o.value=p; o.textContent="ص "+fmt(p); ps.appendChild(o); }
 }
 
-/* ---------- الصوت — قراء متعددون آية بآية ---------- */
+/* ---------- القراء (٣٥ قارئاً آية بآية) ---------- */
 const EV_RECITERS = [
  ["Maher_AlMuaiqly_64kbps","ماهر المعيقلي",""],
  ["Alafasy_128kbps","مشاري راشد العفاسي",""],
@@ -2278,21 +2287,23 @@ async function loadRecitations(){
     const d = list.find(r=>r.name.includes("عبد الباسط")&&(r.style||"").toLowerCase().includes("murattal")) || list[0];
     M.prefs.reciter = d.id; M.prefs.reciterName = d.name; savePrefs();
   }
-}
-function renderRecList(){
-  const el = $("recList"); el.innerHTML = "";
-  M.recitations.forEach(r=>{
-    const d = document.createElement("div");
-    d.className = "rec-item"+(r.id===M.prefs.reciter?" on":"");
-    d.innerHTML = '<span>'+esc(r.name)+' <small>'+esc(r.style||"")+'</small></span>';
-    d.addEventListener("click", ()=>{
-      M.prefs.reciter = r.id; M.prefs.reciterName = r.name; savePrefs();
-      M.urlCache = {}; renderRecList(); showToast("القارئ: "+r.name);
-      if(M.playing){ const k=M.playing; stopAudio(false); playAyah(k); }
-    });
-    el.appendChild(d);
+  const sel = $("recSel"); sel.innerHTML = "";
+  list.forEach(r=>{
+    const o = document.createElement("option");
+    o.value = r.id; o.textContent = r.name+(r.style?" · "+r.style:"");
+    sel.appendChild(o);
   });
+  sel.value = M.prefs.reciter;
 }
+$("recSel").addEventListener("change", ()=>{
+  const v = $("recSel").value;
+  const r = M.recitations.find(x=>String(x.id)===String(v));
+  if(!r) return;
+  M.prefs.reciter = r.id; M.prefs.reciterName = r.name; savePrefs();
+  M.urlCache = {};
+  showToast("القارئ: "+r.name);
+  if(M.playing){ const k=M.playing; stopAudio(false); playAyah(k); }
+});
 async function ayahUrl(key){
   const rid = M.prefs.reciter;
   const ck = rid+"|"+key;
@@ -2315,7 +2326,7 @@ function nextKey(key){ const i = M.keyIdx[key]; return i<M.flat.length-1 ? M.fla
 function markPlaying(key){
   M.playing = key;
   $("mView").querySelectorAll(".q-a.playing").forEach(e=>e.classList.remove("playing"));
-  if(key){ const el = $("mView").querySelector('[data-k="'+key+'"]'); if(el){ el.classList.add("playing"); } }
+  if(key){ const el = $("mView").querySelector('[data-k="'+key+'"]'); if(el) el.classList.add("playing"); }
 }
 async function playAyah(key){
   try{
@@ -2341,7 +2352,7 @@ async function playAyah(key){
     });
     M.audio.addEventListener("error", ()=>{ showToast("تعذّر تشغيل هذه الآية بهذا القارئ"); stopAudio(true); });
     await M.audio.play();
-    const nk = nextKey(key); if(nk && M.cont) ayahUrl(nk).catch(()=>{}); /* تهيئة التالية */
+    const nk = nextKey(key); if(nk && M.cont) ayahUrl(nk).catch(()=>{});
   }catch(e){ showToast("تعذّر تشغيل التلاوة — تحقق من الاتصال"); stopAudio(true); }
 }
 function stopAudio(hideBar){
@@ -2349,8 +2360,18 @@ function stopAudio(hideBar){
   markPlaying(null);
   if(hideBar) $("qAudio").classList.remove("on");
 }
+$("qaPlay").addEventListener("click", ()=>{
+  if(!M.audio) return;
+  if(M.audio.paused){ M.audio.play().catch(()=>{}); $("qaPlay").textContent="⏸"; }
+  else { M.audio.pause(); $("qaPlay").textContent="▶"; }
+});
+$("qaCont").addEventListener("click", ()=>{
+  M.cont = !M.cont; $("qaCont").classList.toggle("act", M.cont);
+  showToast(M.cont ? "متابعة تلقائية للآيات ✓" : "إيقاف بعد الآية الحالية");
+});
+$("qaStop").addEventListener("click", ()=>stopAudio(true));
 
-/* ---------- التفاسير ---------- */
+/* ---------- التفاسير — تتمدد داخل الشريط ---------- */
 async function loadTafsirs(){
   if(M.tafsirs.length) return;
   let list = null;
@@ -2372,12 +2393,8 @@ async function loadTafsirs(){
   list.forEach(t=>{ const o=document.createElement("option"); o.value=t.id; o.textContent=t.name; sel.appendChild(o); });
   sel.value = M.prefs.tafsir;
 }
-async function showTafsir(key){
+async function fillTafsir(key){
   await loadTafsirs();
-  $("tafTitle").textContent = "التفسير — "+refTxt(key);
-  const o = ayObj(key);
-  $("tafRef").textContent = "﴿"+o.text+"﴾";
-  openLayer("tafModal");
   const tid = M.prefs.tafsir;
   const ck = tid+"|"+key;
   const box = $("tafText");
@@ -2392,18 +2409,116 @@ async function showTafsir(key){
 }
 $("tafSel").addEventListener("change", ()=>{
   M.prefs.tafsir = +$("tafSel").value; savePrefs();
-  if(M.sel) showTafsir(M.sel);
+  if(M.sel) fillTafsir(M.sel);
 });
 
-/* ---------- البحث ---------- */
+/* ---------- شريط أدوات الآية ---------- */
+const REP_STEPS = [[1,"مرة"],[3,"×٣"],[5,"×٥"],[10,"×١٠"]];
+let repIdx = 0;
+function syncAyBar(){
+  if(!M.sel) return;
+  $("abRef").textContent = refTxt(M.sel);
+  $("abMark").classList.toggle("on", M.prefs.marks.includes(M.sel));
+  document.querySelectorAll("#ayBar .ay-c").forEach(c=>{
+    c.style.outline = (+c.dataset.c===(M.prefs.colors[M.sel]||0)) ? "2.5px solid var(--gold-hi)" : "none";
+  });
+}
+function selectAyah(key){
+  M.sel = key;
+  $("mView").querySelectorAll(".q-a.sel").forEach(e=>e.classList.remove("sel"));
+  const el = $("mView").querySelector('[data-k="'+key+'"]');
+  if(el) el.classList.add("sel");
+  syncAyBar();
+  $("ayBar").classList.add("open");
+  if($("abTafPanel").classList.contains("open")) fillTafsir(key);
+  loadRecitations().catch(()=>{});
+  try{ buzz(8); }catch(e){}
+}
+function hideAyBar(){
+  $("ayBar").classList.remove("open");
+  $("abTafPanel").classList.remove("open");
+  $("abTafBtn").classList.remove("on");
+  M.sel = null;
+  $("mView").querySelectorAll(".q-a.sel").forEach(e=>e.classList.remove("sel"));
+}
+document.querySelectorAll("#ayBar .ay-c").forEach(c=>{
+  c.addEventListener("click", ()=>{
+    if(!M.sel) return;
+    const v = +c.dataset.c;
+    if(v===0) delete M.prefs.colors[M.sel]; else M.prefs.colors[M.sel] = v;
+    savePrefs();
+    const el = $("mView").querySelector('[data-k="'+M.sel+'"]');
+    if(el){ el.className = el.className.replace(/\bqc\d\b/g,"").trim(); if(v) el.classList.add("qc"+v); }
+    syncAyBar();
+  });
+});
+$("abPlay").addEventListener("click", ()=>{ if(M.sel) playAyah(M.sel); });
+$("abRep").addEventListener("click", ()=>{
+  repIdx = (repIdx+1) % REP_STEPS.length;
+  M.repeatN = REP_STEPS[repIdx][0];
+  $("abRep").textContent = "🔁 "+REP_STEPS[repIdx][1];
+  $("abRep").classList.toggle("on", M.repeatN>1);
+});
+$("abTafBtn").addEventListener("click", ()=>{
+  const p = $("abTafPanel");
+  const open = !p.classList.contains("open");
+  p.classList.toggle("open", open);
+  $("abTafBtn").classList.toggle("on", open);
+  if(open && M.sel) fillTafsir(M.sel);
+});
+$("abMark").addEventListener("click", ()=>{
+  if(!M.sel) return;
+  const i = M.prefs.marks.indexOf(M.sel);
+  if(i>=0){ M.prefs.marks.splice(i,1); showToast("أُزيلت العلامة"); }
+  else { M.prefs.marks.push(M.sel); showToast("حُفظت العلامة 🔖"); }
+  savePrefs(); syncAyBar();
+  const el = $("mView").querySelector('[data-k="'+M.sel+'"]');
+  if(el) el.classList.toggle("q-mark", M.prefs.marks.includes(M.sel));
+});
+$("abCopy").addEventListener("click", ()=>{
+  if(!M.sel) return;
+  const o = ayObj(M.sel);
+  const txt = "﴿"+o.text+"﴾ ["+surOf(o.s).name+": "+o.a+"]";
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+    .then(()=>showToast("نُسخت الآية")).catch(()=>showToast("تعذّر النسخ"));
+});
+
+/* ---------- التفاعل: لمسة = تحديد · لمسة خارج النص = إخفاء/تقليب ---------- */
+$("mView").addEventListener("click", e=>{
+  const ay = e.target.closest(".q-a");
+  if(ay){
+    if(M.sel===ay.dataset.k){ hideAyBar(); return; } /* لمس نفس الآية يخفي الشريط */
+    selectAyah(ay.dataset.k);
+    return;
+  }
+  if($("ayBar").classList.contains("open")){ hideAyBar(); return; }
+  if($("qsPanel").classList.contains("open")){ $("qsPanel").classList.remove("open"); return; }
+  /* لمس حواف الصفحة يقلّبها */
+  if(M.prefs.mode!=="pages") return;
+  const r = $("mView").getBoundingClientRect(), x = e.clientX - r.left, w = r.width;
+  if(x < w*0.26) renderPage(M.prefs.page+1);
+  else if(x > w*0.74) renderPage(M.prefs.page-1);
+});
+/* سحب لتقليب الصفحات / السور */
+let tX=null, tY=null;
+$("mView").addEventListener("touchstart", e=>{ tX=e.touches[0].clientX; tY=e.touches[0].clientY; }, {passive:true});
+$("mView").addEventListener("touchend", e=>{
+  if(tX===null) return;
+  const dx = e.changedTouches[0].clientX-tX, dy = e.changedTouches[0].clientY-tY;
+  tX=null;
+  if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.2){
+    hideAyBar();
+    if(M.prefs.mode==="pages") dx>0 ? renderPage(M.prefs.page+1) : renderPage(M.prefs.page-1);
+    else dx>0 ? renderFlow(M.prefs.surah+1) : renderFlow(M.prefs.surah-1);
+  }
+}, {passive:true});
+
+/* ---------- البحث — لوحة تنسدل من الأعلى بلا نوافذ ---------- */
 function qNorm(s){
   return s.replace(/[\u064B-\u065F\u0670\u0640\u06D6-\u06ED\u06DF-\u06E8\u08D3-\u08FF]/g,"")
     .replace(/[أإآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/\s+/g," ").trim();
 }
-function ensureNorm(){
-  if(M.normArr) return;
-  M.normArr = M.flat.map(o=>qNorm(o.text));
-}
+function ensureNorm(){ if(!M.normArr) M.normArr = M.flat.map(o=>qNorm(o.text)); }
 let qsTimer = null;
 function doSearch(){
   const q = qNorm($("qsInput").value||"");
@@ -2412,126 +2527,55 @@ function doSearch(){
   ensureNorm();
   const out = [];
   for(let i=0;i<M.flat.length && out.length<60;i++){
-    const pos = M.normArr[i].indexOf(q);
-    if(pos>=0) out.push(M.flat[i]);
+    if(M.normArr[i].indexOf(q)>=0) out.push(M.flat[i]);
   }
   if(!out.length){ box.innerHTML = '<div class="qs-hint">لا نتائج — جرّب كلمة أخرى</div>'; return; }
   box.innerHTML = "";
   out.forEach(o=>{
     const d = document.createElement("div"); d.className = "qs-item";
     d.innerHTML = '<div class="w">'+esc(o.text)+'</div><div class="rf">'+refTxt(o.key)+' · صفحة '+fmt(o.page)+'</div>';
-    d.addEventListener("click", ()=>{ closeLayer("qsModal"); goToKey(o.key, true); });
+    d.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); goToKey(o.key, true); });
     box.appendChild(d);
   });
 }
 function renderMarksList(){
   const box = $("qsRes");
-  if(!M.prefs.marks.length){ box.innerHTML = '<div class="qs-hint">اكتب للبحث — أو ستظهر علاماتك المحفوظة هنا</div>'; return; }
+  if(!M.prefs.marks.length){ box.innerHTML = '<div class="qs-hint">اكتب كلمة للبحث في المصحف كاملاً — وعلاماتك المحفوظة 🔖 ستظهر هنا</div>'; return; }
   box.innerHTML = '<div class="qs-hint">🔖 علاماتك المحفوظة</div>';
   M.prefs.marks.forEach(k=>{
     const o = ayObj(k); if(!o) return;
     const d = document.createElement("div"); d.className = "qs-item";
     d.innerHTML = '<div class="w">'+esc(o.text.slice(0,90))+(o.text.length>90?"…":"")+'</div><div class="rf">'+refTxt(k)+' · صفحة '+fmt(o.page)+'</div>';
-    d.addEventListener("click", ()=>{ closeLayer("qsModal"); goToKey(k, true); });
+    d.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); goToKey(k, true); });
     box.appendChild(d);
   });
 }
 $("qsInput").addEventListener("input", ()=>{ clearTimeout(qsTimer); qsTimer = setTimeout(doSearch, 260); });
-
-/* ---------- إجراءات الآية ---------- */
-function openAyTools(key){
-  M.sel = key;
-  $("ayTitle").textContent = refTxt(key);
-  $("ayMark").innerHTML = M.prefs.marks.includes(key)
-    ? '<span class="ic">🔖</span>إزالة العلامة' : '<span class="ic">🔖</span>علامة';
-  document.querySelectorAll("#ayModal .tchip").forEach(c=>c.classList.toggle("on", +c.dataset.rep===M.repeatN));
-  openLayer("ayModal");
-}
-/* ضغطة مطوّلة على الآية = فتح الأدوات · لمسة خفيفة = تمييز مؤقت */
-let lpTimer=null, lpFired=false, lpX=0, lpY=0;
-const mv = $("mView");
-mv.addEventListener("contextmenu", e=>e.preventDefault());
-mv.addEventListener("pointerdown", e=>{
-  lpX=e.clientX; lpY=e.clientY; lpFired=false;
-  const ay = e.target.closest(".q-a"); if(!ay) return;
-  clearTimeout(lpTimer);
-  lpTimer = setTimeout(()=>{ lpFired=true; try{buzz(12);}catch(_e){} openAyTools(ay.dataset.k); }, 450);
+$("mSearchBtn").addEventListener("click", ()=>{
+  const p = $("qsPanel");
+  const open = !p.classList.contains("open");
+  hideAyBar();
+  p.classList.toggle("open", open);
+  if(open){ renderMarksList(); setTimeout(()=>$("qsInput").focus(), 380); }
 });
-mv.addEventListener("pointermove", e=>{
-  if(Math.abs(e.clientX-lpX)>12 || Math.abs(e.clientY-lpY)>12) clearTimeout(lpTimer);
-});
-mv.addEventListener("pointerup", ()=>clearTimeout(lpTimer));
-mv.addEventListener("pointercancel", ()=>clearTimeout(lpTimer));
-mv.addEventListener("click", e=>{
-  if(lpFired){ e.preventDefault(); lpFired=false; return; }
-  const ay = e.target.closest(".q-a");
-  if(ay){ ay.classList.add("tapsel"); setTimeout(()=>ay.classList.remove("tapsel"), 800); return; }
-  /* لمس حواف الصفحة يقلّبها */
-  if(M.prefs.mode!=="pages") return;
-  const r = mv.getBoundingClientRect(), x = e.clientX - r.left, w = r.width;
-  if(x < w*0.26) renderPage(M.prefs.page+1);
-  else if(x > w*0.74) renderPage(M.prefs.page-1);
-});
-document.querySelectorAll("#ayModal .ay-c").forEach(c=>{
-  c.addEventListener("click", ()=>{
-    if(!M.sel) return;
-    const v = +c.dataset.c;
-    if(v===0) delete M.prefs.colors[M.sel]; else M.prefs.colors[M.sel] = v;
-    savePrefs(); closeLayer("ayModal"); rerender();
-  });
-});
-document.querySelectorAll("#ayModal .tchip").forEach(c=>{
-  c.addEventListener("click", ()=>{
-    M.repeatN = +c.dataset.rep;
-    document.querySelectorAll("#ayModal .tchip").forEach(x=>x.classList.toggle("on", x===c));
-  });
-});
-$("ayPlay").addEventListener("click", ()=>{ if(M.sel){ closeLayer("ayModal"); playAyah(M.sel); } });
-$("ayTafsir").addEventListener("click", ()=>{ if(M.sel){ closeLayer("ayModal"); showTafsir(M.sel); } });
-$("ayRec").addEventListener("click", async ()=>{ closeLayer("ayModal"); await loadRecitations(); renderRecList(); openLayer("recModal"); });
-$("ayMark").addEventListener("click", ()=>{
-  if(!M.sel) return;
-  const i = M.prefs.marks.indexOf(M.sel);
-  if(i>=0){ M.prefs.marks.splice(i,1); showToast("أُزيلت العلامة"); }
-  else { M.prefs.marks.push(M.sel); showToast("حُفظت العلامة 🔖"); }
-  savePrefs(); closeLayer("ayModal"); rerender();
-});
-$("ayCopy").addEventListener("click", ()=>{
-  if(!M.sel) return;
-  const o = ayObj(M.sel);
-  const txt = "﴿"+o.text+"﴾ ["+surOf(o.s).name+": "+o.a+"]";
-  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
-    .then(()=>showToast("نُسخت الآية")).catch(()=>showToast("تعذّر النسخ"));
-  closeLayer("ayModal");
-});
-
-/* ---------- شريط الصوت ---------- */
-$("qaPlay").addEventListener("click", ()=>{
-  if(!M.audio) return;
-  if(M.audio.paused){ M.audio.play().catch(()=>{}); $("qaPlay").textContent="⏸"; }
-  else { M.audio.pause(); $("qaPlay").textContent="▶"; }
-});
-$("qaCont").addEventListener("click", ()=>{
-  M.cont = !M.cont; $("qaCont").classList.toggle("act", M.cont);
-  showToast(M.cont ? "متابعة تلقائية للآيات ✓" : "إيقاف بعد الآية الحالية");
-});
-$("qaStop").addEventListener("click", ()=>stopAudio(true));
 
 /* ---------- التنقل ---------- */
 $("mPrev").addEventListener("click", ()=>{
-  if(M.prefs.mode==="pages") renderPage(M.prefs.page-1);
-  else renderFlow(M.prefs.surah-1);
+  hideAyBar();
+  if(M.prefs.mode==="pages") renderPage(M.prefs.page-1); else renderFlow(M.prefs.surah-1);
 });
 $("mNext").addEventListener("click", ()=>{
-  if(M.prefs.mode==="pages") renderPage(M.prefs.page+1);
-  else renderFlow(M.prefs.surah+1);
+  hideAyBar();
+  if(M.prefs.mode==="pages") renderPage(M.prefs.page+1); else renderFlow(M.prefs.surah+1);
 });
 $("mSurSel").addEventListener("change", ()=>{
+  hideAyBar();
   const n = +$("mSurSel").value;
   if(M.prefs.mode==="pages") renderPage(surOf(n).start); else renderFlow(n);
 });
-$("mPageSel").addEventListener("change", ()=>renderPage(+$("mPageSel").value));
+$("mPageSel").addEventListener("change", ()=>{ hideAyBar(); renderPage(+$("mPageSel").value); });
 $("mMode").addEventListener("click", ()=>{
+  hideAyBar();
   if(M.prefs.mode==="pages") renderFlow(M.prefs.surah); else renderPage(M.prefs.page);
 });
 $("mBackChip").addEventListener("click", ()=>{
@@ -2539,18 +2583,6 @@ $("mBackChip").addEventListener("click", ()=>{
   if(!p) return;
   p.mode==="pages" ? renderPage(p.page) : renderFlow(p.surah);
 });
-/* سحب لتقليب الصفحات */
-let tX=null, tY=null;
-$("mView").addEventListener("touchstart", e=>{ tX=e.touches[0].clientX; tY=e.touches[0].clientY; }, {passive:true});
-$("mView").addEventListener("touchend", e=>{
-  if(tX===null) return;
-  const dx = e.changedTouches[0].clientX-tX, dy = e.changedTouches[0].clientY-tY;
-  tX=null;
-  if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.2){
-    if(M.prefs.mode==="pages") dx>0 ? renderPage(M.prefs.page+1) : renderPage(M.prefs.page-1);
-    else dx>0 ? renderFlow(M.prefs.surah+1) : renderFlow(M.prefs.surah-1);
-  }
-}, {passive:true});
 
 /* ---------- فتح وإغلاق ---------- */
 $("btnMushaf").addEventListener("click", async ()=>{
@@ -2558,25 +2590,22 @@ $("btnMushaf").addEventListener("click", async ()=>{
   const ok = await ensureQuran();
   if(!ok) return;
   if(!M.opened){ buildSelectors(); M.opened=true; }
+  M.sel = null;
   rerender();
   loadRecitations().catch(()=>{});
   loadTafsirs().catch(()=>{});
   try{
-    if(!localStorage.getItem("amalan:lp_hint")){
-      localStorage.setItem("amalan:lp_hint","1");
-      setTimeout(()=>showToast("💡 اضغط مطوّلاً على أي آية لفتح أدواتها — والمس حافة الصفحة لتقليبها"), 900);
+    if(!localStorage.getItem("amalan:hint2")){
+      localStorage.setItem("amalan:hint2","1");
+      setTimeout(()=>showToast("💡 المس أي آية تظهر أدواتها في الأسفل — والمس حافة الصفحة لتقليبها"), 900);
     }
   }catch(e){}
 });
 $("mClose").addEventListener("click", ()=>{
   stopAudio(true);
+  hideAyBar();
   savePrefs();
   $("mushaf").classList.remove("open");
-});
-$("mSearchBtn").addEventListener("click", ()=>{
-  renderMarksList();
-  openLayer("qsModal");
-  setTimeout(()=>$("qsInput").focus(), 350);
 });
 })();
 </script>
