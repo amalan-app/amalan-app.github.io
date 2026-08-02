@@ -2284,10 +2284,15 @@ async function renderPage(p){
   M.prefs.page = p; M.prefs.mode = "pages";
   const list = M.byPage[p]||[];
   if(list.length) M.prefs.surah = list[0].s;
-  try{
-    await renderPageAuthentic(p);
-  }catch(e){
-    if(M.prefs.page===p) renderPageBasic(p);
+  /* سباق: إن جهزت الصفحة المطبوعة خلال ٣٥٠م.ث اعرضها فوراً،
+     وإلا اعرض النص مباشرة ثم استبدله بالمطبوع فور اكتماله */
+  let authDone = false;
+  const auth = renderPageAuthentic(p)
+    .then(()=>{ authDone = true; })
+    .catch(()=>{ if(M.prefs.page===p && !authDone) renderPageBasic(p); });
+  await Promise.race([auth, new Promise(r=>setTimeout(r, 350))]);
+  if(!authDone && M.prefs.page===p && !$("mView").querySelector(".q-page15")){
+    renderPageBasic(p);
   }
   if(M.prefs.page!==p) return;
   $("mView").scrollTop = 0;
@@ -2298,7 +2303,7 @@ async function renderPage(p){
   $("mMode").textContent = "قراءة";
   savePrefs();
   /* تهيئة الصفحتين المجاورتين مسبقاً لتقليب فوري */
-  [p+1, p-1].forEach(q=>{ if(q>=1&&q<=604){ pageWords(q).catch(()=>{}); pageFont(q).catch(()=>{}); } });
+  [p+1, p+2, p-1].forEach(q=>{ if(q>=1&&q<=604){ pageWords(q).catch(()=>{}); pageFont(q).catch(()=>{}); } });
 }
 function renderFlow(n){
   n = Math.max(1, Math.min(114, n));
