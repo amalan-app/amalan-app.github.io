@@ -570,6 +570,10 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
   direction:rtl;text-align:right;border-bottom:1px dashed var(--card-b);padding-bottom:7px;margin-bottom:6px}
 .taf-meta{font-size:11.5px;color:var(--gold-hi);font-weight:700;margin-bottom:8px}
 .taf-body{direction:rtl}
+.taf-asbab{margin-top:10px;border-top:1px dashed var(--card-b);padding-top:8px;direction:rtl}
+.taf-asbab .ta-h{font-family:var(--f-display);font-size:14px;font-weight:700;color:var(--gold-hi);margin-bottom:5px}
+.taf-asbab p{font-size:13.5px;line-height:2;color:var(--ink);margin-bottom:6px}
+.taf-asbab .ta-src{font-size:10.5px;color:var(--muted)}
 .qs-panel{overflow:hidden;max-height:0;padding:0 14px;background:var(--bg1);
   transition:max-height .4s var(--ease), padding .3s;position:absolute;left:0;right:0;z-index:82;
   top:calc(62px + env(safe-area-inset-top));box-shadow:0 18px 40px rgba(0,0,0,.18)}
@@ -2688,6 +2692,25 @@ async function loadTafsirs(){
   list.forEach(t=>{ const o=document.createElement("option"); o.value=t.id; o.textContent=t.name; sel.appendChild(o); });
   sel.value = M.prefs.tafsir;
 }
+let ASB=null, ASBjob=null;
+function loadAsbab(){
+  if(ASB) return Promise.resolve(ASB);
+  if(ASBjob) return ASBjob;
+  ASBjob = (async ()=>{
+    let txt = await idbGet("asbab-v1").catch(()=>null);
+    if(!txt){
+      if(typeof DecompressionStream!=="function") throw new Error("old");
+      const r = await fetch("asbab.json.gz");
+      if(!r.ok) throw new Error("http");
+      txt = await new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).text();
+      idbSet("asbab-v1", txt).catch(()=>{});
+    }
+    ASB = JSON.parse(txt);
+    return ASB;
+  })();
+  ASBjob.catch(()=>{ ASBjob=null; });
+  return ASBjob;
+}
 async function tafsirText(tid, key){
   const ck = tid+"|"+key;
   if(M.tafCache[ck]) return M.tafCache[ck];
@@ -2717,6 +2740,20 @@ async function fillTafsir(key){
     if(M.sel!==key || M.prefs.tafsir!==tid) return;
     box.innerHTML = head+'<div class="taf-body">'+(t || "لا يتوفر تفسير لهذه الآية في هذا الكتاب.")+'</div>';
   }catch(e){ box.innerHTML = head+'<div class="taf-body">تعذّر إحضار التفسير — تحقق من الاتصال</div>'; }
+  /* سبب النزول — يظهر فقط للآيات التي صحّ فيها سبب نزول */
+  try{
+    const asb = await loadAsbab();
+    if(M.sel!==key) return;
+    const arr = asb[key];
+    if(arr && arr.length){
+      const div = document.createElement("div");
+      div.className = "taf-asbab";
+      div.innerHTML = '<div class="ta-h">سبب النزول</div>'+
+        arr.map(t=>'<p>'+esc(t)+'</p>').join('')+
+        '<div class="ta-src">المصدر: صحيح أسباب النزول — دراسة حديثية</div>';
+      box.appendChild(div);
+    }
+  }catch(e){}
 }
 $("tafSel").addEventListener("change", ()=>{
   const v = $("tafSel").value;
