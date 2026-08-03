@@ -132,7 +132,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
   animation:beadIn .7s var(--ease)}
 @keyframes beadIn{0%{transform:scale(0) translateY(-18px);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
 .bead-count{font-size:12px;color:var(--gold);font-weight:600;margin-inline-start:4px}
-.beads .empty-line{width:120px;height:1px;background:linear-gradient(90deg,transparent,rgba(110,108,68,.30),transparent)}
+.beads .empty-line{display:none}
 
 /* ======== شريط الأدوات أسفل العدّاد ======== */
 .tools{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:10px;flex-wrap:wrap}
@@ -403,7 +403,7 @@ html.dark #flashFx{background:radial-gradient(130% 130% at 50% 42%, rgba(232,227
 /* ======== شريط مواقيت الصلاة ======== */
 #prayerBar{margin-top:10px}
 .p-row{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
-.p-cell{min-width:58px;padding:7px 6px 6px;border-radius:13px;text-align:center;
+.p-cell{min-width:50px;padding:7px 5px 6px;border-radius:13px;text-align:center;
   border:1px solid var(--card-b);background:var(--card)}
 .p-cell .n{font-size:11.5px;color:var(--muted);margin-bottom:2px}
 .p-cell .t{font-size:14.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -701,8 +701,8 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <button class="tool" id="btnNext">الذكر التالي ›</button>
     </div>
     <div class="tools tools-main">
-      <button class="tool gold" id="btnRadio">📻 الإذاعة</button>
       <button class="tool gold" id="btnMushaf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 5.2C10.4 3.9 8.2 3.2 5.6 3.2c-.9 0-1.7.08-2.6.25V18.6c.9-.17 1.7-.25 2.6-.25 2.6 0 4.8.7 6.4 2 1.6-1.3 3.8-2 6.4-2 .9 0 1.7.08 2.6.25V3.45a13.6 13.6 0 0 0-2.6-.25c-2.6 0-4.8.7-6.4 2Z"/><path d="M12 5.2v15.15"/><path d="M7.6 8.4c.9-.5 1.6-.5 2.4 0M7.6 11.4c.9-.5 1.6-.5 2.4 0M14 8.4c.9-.5 1.6-.5 2.4 0M14 11.4c.9-.5 1.6-.5 2.4 0"/></svg> المصحف الشريف</button>
+      <button class="tool gold" id="btnRadio">📻 الإذاعة</button>
     </div>
   </div>
 
@@ -2086,21 +2086,22 @@ function prayerTimes(lat, lng, date, tzHours){
     const angle=-R2D*Math.atan(1/(1+Math.tan(Math.abs(lat-s.d)*D2R)));
     return angleTime(angle,t,"cw");
   }
-  let fajr=5/24, dhuhr=12/24, asr=13/24, maghrib=18/24;
+  let fajr=5/24, sunrise=6/24, dhuhr=12/24, asr=13/24, maghrib=18/24;
   for(let i=0;i<2;i++){
-    fajr=angleTime(18.5,fajr,"ccw")/24; dhuhr=midDay(dhuhr)/24;
-    asr=asrTime(asr)/24; maghrib=angleTime(0.833,maghrib,"cw")/24;
+    fajr=angleTime(18.5,fajr,"ccw")/24; sunrise=angleTime(0.833,sunrise,"ccw")/24;
+    dhuhr=midDay(dhuhr)/24; asr=asrTime(asr)/24; maghrib=angleTime(0.833,maghrib,"cw")/24;
   }
   const toLocal=h=>fixH(h*24 - lng/15 + tzHours);
   return {
-    fajr:toLocal(fajr), dhuhr:toLocal(dhuhr), asr:toLocal(asr),
+    fajr:toLocal(fajr), ishraq:fixH(toLocal(sunrise)+0.25), dhuhr:toLocal(dhuhr), asr:toLocal(asr),
     maghrib:toLocal(maghrib), isha:fixH(toLocal(maghrib)+1.5)
   };
 }
-const PRAYER_NAMES = {fajr:"الفجر", dhuhr:"الظهر", asr:"العصر", maghrib:"المغرب", isha:"العشاء"};
+const PRAYER_NAMES = {fajr:"الفجر", ishraq:"الإشراق", dhuhr:"الظهر", asr:"العصر", maghrib:"المغرب", isha:"العشاء"};
+const DISPLAY_ORDER = ["fajr","ishraq","dhuhr","asr","maghrib","isha"];
 let geo = {lat:24.7136, lng:46.6753}; /* الافتراضي: الرياض حتى يُحدَّد الموقع */
 let geoReal = false, lastAdhanKey = "";
-function geoName(){
+function geoName(cb){
   /* اسم المنطقة بالعربية من الإحداثيات */
   fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+geo.lat+
         "&longitude="+geo.lng+"&localityLanguage=ar")
@@ -2110,32 +2111,54 @@ function geoName(){
       if(n){ geo.name = n;
         try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
         updatePrayerPill();
+        if(cb) cb(n);
       }
     }).catch(()=>{});
 }
-function initGeo(){
+function applyGeo(lat, lng){
+  const moved = Math.abs(geo.lat-lat)>0.12 || Math.abs(geo.lng-lng)>0.12;
+  geo.lat = lat; geo.lng = lng; geoReal = true;
+  try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
+  updatePrayerPill();
+  if(!geo.name || moved){
+    const old = geo.name;
+    geoName(n=>{ if(moved && n && n!==old) showToast("تم تحديث موقعك: "+n+" 🕌"); });
+  }
+}
+function sysLocate(){
+  /* موقع النظام — مرتبط بإعدادات الجهاز ويتغير تلقائياً مع التنقل */
+  return new Promise(res=>{
+    if(!navigator.geolocation) return res(false);
+    navigator.geolocation.getCurrentPosition(
+      p=>{ applyGeo(p.coords.latitude, p.coords.longitude); res(true); },
+      ()=>res(false),
+      {enableHighAccuracy:false, timeout:9000, maximumAge:120000});
+  });
+}
+function ipLocate(){
+  fetch("https://ipwho.is/").then(r=>r.json()).then(d=>{
+    if(!d || d.success===false || !d.latitude) throw 0;
+    applyGeo(d.latitude, d.longitude);
+  }).catch(()=>{
+    fetch("https://ipapi.co/json/").then(r=>r.json()).then(d=>{
+      if(d && d.latitude) applyGeo(d.latitude, d.longitude);
+      else updatePrayerPill();
+    }).catch(()=>{ updatePrayerPill(); });
+  });
+}
+async function initGeo(){
   try{
     const c = localStorage.getItem("amalan:geo");
     if(c){ geo = JSON.parse(c); geoReal = true; }
   }catch(e){}
-  /* تحديد صامت عبر الشبكة — لا يظهر أي إذن أو إشعار للمستخدم */
-  fetch("https://ipwho.is/").then(r=>r.json()).then(d=>{
-    if(!d || d.success===false || !d.latitude) throw 0;
-    const moved = Math.abs(geo.lat-d.latitude)>0.2 || Math.abs(geo.lng-d.longitude)>0.2;
-    geo.lat = d.latitude; geo.lng = d.longitude; geoReal = true;
-    try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
-    updatePrayerPill();
-    if(!geo.name || moved) geoName();
-  }).catch(()=>{
-    fetch("https://ipapi.co/json/").then(r=>r.json()).then(d=>{
-      if(!d || !d.latitude) return;
-      geo.lat = d.latitude; geo.lng = d.longitude; geoReal = true;
-      try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
-      updatePrayerPill();
-      if(!geo.name) geoName();
-    }).catch(()=>{ updatePrayerPill(); });
-  });
+  updatePrayerPill();
+  const ok = await sysLocate();
+  if(!ok) ipLocate();
 }
+/* عند العودة للتطبيق: إعادة قراءة الموقع تلقائياً (سفر أو تنقل) */
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden) sysLocate().then(ok=>{ if(!ok) ipLocate(); });
+});
 const PRAYER_ORDER = ["fajr","dhuhr","asr","maghrib","isha"];
 function fmtTime(h){
   let H = Math.floor(h), M = Math.floor((h-H)*60+0.5);
@@ -2153,9 +2176,9 @@ function updatePrayerPill(){
     const times = prayerTimes(geo.lat, geo.lng, new Date(now.getFullYear(),now.getMonth(),now.getDate()), tz);
     let nextKey = null;
     for(const k of PRAYER_ORDER){ if(times[k] > nowH){ nextKey = k; break; } }
-    /* خلايا المواقيت الخمسة */
+    /* خلايا المواقيت (مع الإشراق) */
     const row = $("pRow"); row.innerHTML = "";
-    for(const k of PRAYER_ORDER){
+    for(const k of DISPLAY_ORDER){
       const c = document.createElement("div");
       const isNext = (k===nextKey);
       c.className = "p-cell"+(isNext?" next":(times[k]<=nowH?" done":""));
@@ -2933,7 +2956,7 @@ function slTick(){
     if(tickCtx.state==="suspended") tickCtx.resume();
     const t=tickCtx.currentTime, o=tickCtx.createOscillator(), g=tickCtx.createGain();
     o.type="sine"; o.frequency.setValueAtTime(820,t);
-    g.gain.setValueAtTime(0.005,t); g.gain.exponentialRampToValueAtTime(0.00008,t+0.06);
+    g.gain.setValueAtTime(0.0028,t); g.gain.exponentialRampToValueAtTime(0.00006,t+0.06);
     o.connect(g); g.connect(tickCtx.destination); o.start(t); o.stop(t+0.065);
   }catch(e){}
 }
@@ -2996,6 +3019,64 @@ $("mClose").addEventListener("click", ()=>{
 })();
 </script>
 
+<script>
+/* ============ خزنة البيانات — ضمان بقاء بيانات المستخدم مهما حدث ============
+   كل بيانات المستخدم (العدادات، الأذكار، العلامات، الألوان، الإعدادات) تُنسخ
+   احتياطياً إلى IndexedDB باستمرار، وتُستعاد تلقائياً إن فُقدت نسخة localStorage
+   لأي سبب (تحديث التطبيق، تنظيف النظام للتخزين، إعادة التثبيت من المتجر). */
+(function(){
+  function vdb(){ return new Promise(function(res,rej){
+    var q = indexedDB.open("amalanQuran",1);
+    q.onupgradeneeded = function(){ q.result.createObjectStore("kv"); };
+    q.onsuccess = function(){ res(q.result); }; q.onerror = function(){ rej(q.error); };
+  });}
+  function vget(k){ return vdb().then(function(d){ return new Promise(function(res,rej){
+    var t=d.transaction("kv").objectStore("kv").get(k); t.onsuccess=function(){res(t.result);}; t.onerror=function(){rej(t.error);};
+  });});}
+  function vset(k,v){ return vdb().then(function(d){ return new Promise(function(res,rej){
+    var t=d.transaction("kv","readwrite").objectStore("kv").put(v,k); t.onsuccess=function(){res();}; t.onerror=function(){rej(t.error);};
+  });});}
+  function snapshot(){
+    var o={};
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(k && k.indexOf("amalan")===0) o[k]=localStorage.getItem(k);
+    }
+    return o;
+  }
+  var lastJson="";
+  function backup(){
+    try{
+      var o=snapshot();
+      if(!o["amalan:amalan_state_v1"] && !o["amalan:quran_prefs"]) return; /* لا شيء يستحق */
+      var j=JSON.stringify(o);
+      if(j===lastJson) return;
+      lastJson=j;
+      vset("vault-user-data", o)["catch"](function(){});
+    }catch(e){}
+  }
+  /* استعادة تلقائية إن كانت البيانات الأساسية مفقودة والخزنة موجودة */
+  try{
+    if(!localStorage.getItem("amalan:amalan_state_v1")){
+      vget("vault-user-data").then(function(v){
+        if(v && v["amalan:amalan_state_v1"]){
+          Object.keys(v).forEach(function(k){
+            if(localStorage.getItem(k)===null) localStorage.setItem(k, v[k]);
+          });
+          location.reload();
+        }
+      })["catch"](function(){});
+    }
+  }catch(e){}
+  /* نسخ احتياطي دوري وعند مغادرة التطبيق */
+  setInterval(backup, 45000);
+  window.addEventListener("pagehide", backup);
+  document.addEventListener("visibilitychange", function(){ if(document.hidden) backup(); });
+  setTimeout(backup, 8000);
+  /* طلب تثبيت التخزين من المتصفح (يمنع حذفه تحت ضغط المساحة حيث يُدعم) */
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+})();
+</script>
 <script>
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
