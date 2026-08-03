@@ -566,6 +566,10 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 .ab-taf.open{display:block}
 .ab-taf .m-sel{width:100%;max-width:none;margin-bottom:8px;height:36px}
 .ab-taf .tafs-text{max-height:34vh}
+.taf-ay{font-family:'Amiri Quran','Amiri',serif;font-size:17.5px;line-height:2.1;color:var(--ink);
+  direction:rtl;text-align:right;border-bottom:1px dashed var(--card-b);padding-bottom:7px;margin-bottom:6px}
+.taf-meta{font-size:11.5px;color:var(--gold-hi);font-weight:700;margin-bottom:8px}
+.taf-body{direction:rtl}
 .qs-panel{overflow:hidden;max-height:0;padding:0 14px;background:var(--bg1);
   transition:max-height .4s var(--ease), padding .3s;position:absolute;left:0;right:0;z-index:82;
   top:calc(62px + env(safe-area-inset-top));box-shadow:0 18px 40px rgba(0,0,0,.18)}
@@ -2615,6 +2619,7 @@ async function ayahUrl(key){
 function nextKey(key){ const i = M.keyIdx[key]; return i<M.flat.length-1 ? M.flat[i+1].key : null; }
 function markPlaying(key){
   M.playing = key;
+  try{ syncAbPlay(); }catch(e){}
   $("mView").querySelectorAll(".q-a.playing").forEach(e=>e.classList.remove("playing"));
   if(key) $("mView").querySelectorAll('[data-k="'+key+'"]').forEach(el=>el.classList.add("playing"));
 }
@@ -2703,11 +2708,15 @@ async function fillTafsir(key){
   await loadTafsirs();
   const tid = M.prefs.tafsir;
   const box = $("tafText");
-  box.textContent = "…جارٍ إحضار التفسير";
+  const o = ayObj(key), sr = surOf(o.s);
+  const head = '<div class="taf-ay">﴿'+esc(o.text)+'﴾</div>'+
+    '<div class="taf-meta">'+sr.name+' — '+sr.type+' · الآية '+fmt(o.a)+'</div>';
+  box.innerHTML = head+'<div class="taf-body">…جارٍ إحضار التفسير</div>';
   try{
     const t = await tafsirText(tid, key);
-    box.innerHTML = t || "لا يتوفر تفسير لهذه الآية في هذا الكتاب.";
-  }catch(e){ box.textContent = "تعذّر إحضار التفسير — تحقق من الاتصال"; }
+    if(M.sel!==key || M.prefs.tafsir!==tid) return;
+    box.innerHTML = head+'<div class="taf-body">'+(t || "لا يتوفر تفسير لهذه الآية في هذا الكتاب.")+'</div>';
+  }catch(e){ box.innerHTML = head+'<div class="taf-body">تعذّر إحضار التفسير — تحقق من الاتصال</div>'; }
 }
 $("tafSel").addEventListener("change", ()=>{
   const v = $("tafSel").value;
@@ -2733,6 +2742,7 @@ function selectAyah(key){
   $("mView").querySelectorAll(".q-a.sel").forEach(e=>e.classList.remove("sel"));
   $("mView").querySelectorAll('[data-k="'+key+'"]').forEach(el=>el.classList.add("sel"));
   syncAyBar();
+  try{ syncAbPlay(); }catch(e){}
   $("ayBar").classList.add("open");
   if($("abTafPanel").classList.contains("open")) fillTafsir(key);
   loadRecitations().catch(()=>{});
@@ -2759,7 +2769,15 @@ document.querySelectorAll("#ayBar .ay-c").forEach(c=>{
     syncAyBar();
   });
 });
-$("abPlay").addEventListener("click", ()=>{ if(M.sel) playAyah(M.sel); });
+$("abPlay").addEventListener("click", ()=>{
+  if(!M.sel) return;
+  if(M.playing===M.sel && M.audio){ stopAudio(true); syncAbPlay(); return; }
+  playAyah(M.sel);
+});
+function syncAbPlay(){
+  $("abPlay").textContent = (M.sel && M.playing===M.sel && M.audio) ? "⏹ توقف" : "▶ تشغيل";
+  $("abPlay").classList.toggle("on", !!(M.sel && M.playing===M.sel && M.audio));
+}
 $("abRep").addEventListener("click", ()=>{
   repIdx = (repIdx+1) % REP_STEPS.length;
   M.repeatN = REP_STEPS[repIdx][0];
@@ -2836,19 +2854,31 @@ mvEl.addEventListener("mousedown", e=>{
 });
 mvEl.addEventListener("mouseup", lpCancel);
 mvEl.addEventListener("mouseleave", lpCancel);
+let dtKey=null, dtTime=0, dtT=null;
 mvEl.addEventListener("click", e=>{
   if(lpDone){ e.preventDefault(); lpDone=false; return; }
   /* أثناء فتح أدوات الآية: أي لمسة في أي مكان تُغلقها بانسيابية */
   if($("ayBar").classList.contains("open")){ hideAyBar(); return; }
+  if($("qsPanel").classList.contains("open")){ $("qsPanel").classList.remove("open"); return; }
   const ay = e.target.closest(".q-a");
   if(ay){
-    /* لمسة سريعة: تمييز لحظي — والأدوات بالضغطة المطوّلة */
-    $("mView").querySelectorAll('[data-k="'+ay.dataset.k+'"]').forEach(el=>{
+    const k = ay.dataset.k, now = Date.now();
+    /* ضغطتان متتابعتان على نفس الآية = فتح أدواتها */
+    if(dtKey===k && (now-dtTime)<380){
+      clearTimeout(dtT); dtKey=null;
+      selectAyah(k);
+      return;
+    }
+    dtKey=k; dtTime=now;
+    $("mView").querySelectorAll('[data-k="'+k+'"]').forEach(el=>{
       el.classList.add("tapsel"); setTimeout(()=>el.classList.remove("tapsel"), 700);
     });
+    /* أُجّل إظهار الأدوات قليلاً ريثما نعرف أهي ضغطة أم ضغطتان */
+    clearTimeout(dtT);
+    dtT = setTimeout(()=>{ dtKey=null; toggleChrome(); }, 390);
+    return;
   }
-  if($("qsPanel").classList.contains("open")){ $("qsPanel").classList.remove("open"); return; }
-  toggleChrome(); /* أي لمسة على الصفحة: إظهار الأدوات أو إخفاؤها */
+  toggleChrome(); /* لمسة خارج النص: إظهار الأدوات أو إخفاؤها فوراً */
 });
 /* الأدوات تختفي وحدها بعد ثوانٍ من عدم الاستخدام */
 let chromeT=null;
@@ -2964,7 +2994,7 @@ let tipT=null;
 $("mSlider").addEventListener("input", ()=>{
   if(!M.surahs) return;
   const p = +$("mSlider").value;
-  if(p!==lastTickP){ lastTickP=p; slTick(); }
+  if(p!==lastTickP){ lastTickP=p; slTick(); if(QP) ensureQcfFont(QP[p-1].f).catch(()=>{}); }
   $("mTip").textContent = surahForPage(p).name+" · صفحة "+fmt(p);
   $("mTip").classList.add("on");
   clearTimeout(tipT); tipT = setTimeout(()=>$("mTip").classList.remove("on"), 1400);
