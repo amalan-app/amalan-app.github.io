@@ -135,8 +135,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
 .beads .empty-line{display:none}
 
 /* ======== شريط الأدوات أسفل العدّاد ======== */
-.tools{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:10px;flex-wrap:wrap}
-.tools-main{margin-top:8px}
+.tools{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:20px;flex-wrap:wrap}
+.tools-main{margin-top:9px}
 .tools-main .tool{flex:1 1 auto;max-width:220px;justify-content:center;height:46px;border-radius:23px;
   font-size:14px;font-weight:700;color:var(--gold-hi);border-color:rgba(110,108,68,.4);background:var(--card)}
 html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
@@ -185,6 +185,11 @@ html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
 .dcard .edit{width:30px;height:30px;border-radius:10px;border:none;background:rgba(110,108,68,.10);
   color:var(--faint);cursor:pointer;font-size:14px;display:grid;place-items:center}
 .dcard .mini-bar{height:3px;border-radius:2px;background:rgba(110,108,68,.14);margin-top:9px;overflow:hidden}
+.dcard.dc1{border-inline-start:4px solid #EFCB46}.dcard.dc2{border-inline-start:4px solid #7DC37D}
+.dcard.dc3{border-inline-start:4px solid #7AA5EB}.dcard.dc4{border-inline-start:4px solid #EE91A5}
+.dcard.dc5{border-inline-start:4px solid #C391EE}
+#dColorRow{display:flex;gap:9px}
+#dColorRow .ay-c{width:32px;height:32px}
 .dcard .mini-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-hi));
   border-radius:2px;transition:width .6s var(--ease)}
 .add-btn{margin-top:11px;height:48px;border-radius:16px;border:1px dashed rgba(110,108,68,.4);
@@ -643,9 +648,14 @@ html.dark .qmk{box-shadow:inset 0 -2.5px 0 rgba(201,196,142,.6)}
   -webkit-appearance:none;appearance:none;background:transparent}
 #mSlider::-webkit-slider-runnable-track{height:7px;border-radius:4px;background:rgba(110,108,68,.22)}
 #mSlider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
-  background:var(--gold);border:2.5px solid var(--bg1);margin-top:-9px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  background:var(--gold);border:2.5px solid var(--bg1);margin-top:-9px;box-shadow:0 2px 8px rgba(0,0,0,.25);
+  transition:transform .18s var(--ease), box-shadow .18s var(--ease)}
+#mSlider:active::-webkit-slider-thumb{transform:scale(1.5);
+  box-shadow:0 0 0 9px rgba(110,108,68,.22), 0 3px 12px rgba(0,0,0,.35)}
+html.dark #mSlider:active::-webkit-slider-thumb{box-shadow:0 0 0 9px rgba(201,196,142,.22), 0 3px 12px rgba(0,0,0,.5)}
 #mSlider::-moz-range-track{height:7px;border-radius:4px;background:rgba(110,108,68,.22)}
-#mSlider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--gold);border:2.5px solid var(--bg1)}
+#mSlider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--gold);border:2.5px solid var(--bg1);transition:transform .18s}
+#mSlider:active::-moz-range-thumb{transform:scale(1.5)}
 html.dark #mSlider::-webkit-slider-runnable-track{background:rgba(201,196,142,.25)}
 html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
 .m-tip{position:fixed;bottom:calc(126px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
@@ -762,6 +772,14 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <input id="fCustom" type="number" min="1" inputmode="numeric" placeholder="أدخل العدد" style="display:none;margin-top:8px">
     </div>
     <div class="field">
+      <label>لون مميز لهذا الذكر (اختياري)</label>
+      <div class="target-chips" id="dColorRow">
+        <span class="ay-c c1" data-dc="1"></span><span class="ay-c c2" data-dc="2"></span>
+        <span class="ay-c c3" data-dc="3"></span><span class="ay-c c4" data-dc="4"></span>
+        <span class="ay-c c5" data-dc="5"></span><span class="ay-c c0" data-dc="0">⌀</span>
+      </div>
+    </div>
+    <div class="field">
       <label>صورة خلفية لهذا الذكر (اختياري)</label>
       <div class="bg-field">
         <div class="bg-thumb" id="bgThumb">🖼</div>
@@ -875,22 +893,15 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       </div>
       <div class="eq" style="display:none"><i></i><i></i><i></i></div>
     </div>
-    <div class="station" data-station="huthaifi">
+    <div class="station" data-station="reciters">
       <div class="pp">▶</div>
       <div class="info">
-        <div class="nm">تلاوات الشيخ علي الحذيفي</div>
-        <div class="ds">إمام المسجد النبوي · على مدار الساعة</div>
+        <div class="nm">إذاعة علي بن عبدالرحمن الحذيفي</div>
+        <div class="ds">إذاعات كبار القراء · اختر القارئ من القائمة · مباشر</div>
       </div>
       <div class="eq" style="display:none"><i></i><i></i><i></i></div>
     </div>
-    <div class="station" data-station="salma">
-      <div class="pp">▶</div>
-      <div class="info">
-        <div class="nm">تلاوات خاشعة</div>
-        <div class="ds">مختارات هادئة تناسب جلسة الذكر</div>
-      </div>
-      <div class="eq" style="display:none"><i></i><i></i><i></i></div>
-    </div>
+    <select class="m-sel" id="recRadioSel" style="width:100%;max-width:none;margin:2px 0 6px"></select>
     <div class="vol-row">
       <span>🔊</span>
       <input type="range" id="radioVol" min="0" max="100" value="70" aria-label="مستوى الصوت">
@@ -1240,7 +1251,7 @@ function renderList(){
   list.innerHTML = "";
   sortedAdhkar().forEach(d=>{
     const card = document.createElement("div");
-    card.className = "dcard"+(d.id===state.settings.activeId?" active":"");
+    card.className = "dcard"+(d.id===state.settings.activeId?" active":"")+(d.color?" dc"+d.color:"");
     const pct = d.target>0 ? Math.min(100, Math.round(d.cycle/d.target*100)) : (d.today>0?100:0);
     card.innerHTML =
       '<div class="name">'+escapeHtml(d.text)+'</div>'+
@@ -1366,6 +1377,14 @@ function doTap(x,y){
   /* الهدف بلا حدّ: ومضة كل ١٠٠ تسبيحة */
   if(d.target===0 && d.today>0 && d.today%100===0){
     flashScreen(); celebrate();
+  }
+  /* ومضات تحفيزية في منتصف الطريق */
+  if(!roundDone && d.target===100 && d.cycle===50){
+    flashScreen(); buzz([15,50,15]);
+    showToast("ما شاء الله — نصف الطريق! أكمل بارك الله فيك 🌟");
+  } else if(!roundDone && d.target>=1000 && d.cycle>0 && d.cycle%100===0){
+    flashScreen(); buzz([15,50,15]);
+    showToast("ما شاء الله — "+fmt(d.cycle)+" من "+fmt(d.target)+" 🌟");
   }
 
   if(roundDone){
@@ -1608,14 +1627,31 @@ const STATIONS = {
     {url:"https://stream.radiojar.com/4wqre23fytzuv"},
     {url:"https://backup.qurango.net/radio/mix"}
   ]},
-  huthaifi:{name:"تلاوات الشيخ علي الحذيفي", sources:[
+  reciters:{name:"إذاعات كبار القراء", sources:[
     {url:"https://backup.qurango.net/radio/ali_alhuthaifi"}
-  ]},
-  salma:{name:"تلاوات خاشعة", sources:[
-    {url:"https://backup.qurango.net/radio/salma"},
-    {url:"https://backup.qurango.net/radio/tarateel"}
   ]}
 };
+/* إذاعات القراء — بث مباشر من شبكة mp3quran الرسمية */
+const RECITER_RADIOS = [
+  ["علي بن عبدالرحمن الحذيفي","https://backup.qurango.net/radio/ali_alhuthaifi"],
+  ["محمد صديق المنشاوي — مرتل","https://backup.qurango.net/radio/mohammed_siddiq_alminshawi"],
+  ["محمد صديق المنشاوي — مجوّد","https://backup.qurango.net/radio/mohammed_siddiq_alminshawi_mojawwad"],
+  ["عبدالباسط عبدالصمد — مرتل","https://backup.qurango.net/radio/abdulbasit_abdulsamad"],
+  ["عبدالباسط عبدالصمد — مجوّد","https://backup.qurango.net/radio/abdulbasit_abdulsamad_mojawwad"],
+  ["سعود الشريم","https://backup.qurango.net/radio/saud_alshuraim"],
+  ["عبدالرحمن السديس","https://backup.qurango.net/radio/abdulrahman_alsudaes"],
+  ["ماهر المعيقلي","https://backup.qurango.net/radio/maher"]
+];
+function setReciterRadio(i, autoplay){
+  i = Math.max(0, Math.min(RECITER_RADIOS.length-1, +i||0));
+  const r = RECITER_RADIOS[i];
+  STATIONS.reciters.name = "إذاعة "+r[0];
+  STATIONS.reciters.sources = [{url:r[1]}];
+  try{ localStorage.setItem("amalan:radioRec", i); }catch(e){}
+  const nm = document.querySelector('[data-station="reciters"] .nm');
+  if(nm) nm.textContent = "إذاعة "+r[0];
+  if(autoplay && radioWanted && radioCurrent==="reciters") playStation("reciters");
+}
 const CONNECT_TIMEOUT = 12000;
 const IN_PREVIEW = (function(){ try{ return window.self !== window.top; }catch(e){ return true; } })();
 let radioAudio=null, radioHls=null, radioCurrent=null, radioWanted=false, attemptId=0;
@@ -1740,6 +1776,14 @@ async function playStation(key){
 document.querySelectorAll(".station").forEach(s=>{
   s.addEventListener("click", ()=>playStation(s.dataset.station));
 });
+(function(){
+  const sel = $("recRadioSel");
+  RECITER_RADIOS.forEach((r,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=r[0]; sel.appendChild(o); });
+  let saved = 0; try{ saved = +localStorage.getItem("amalan:radioRec")||0; }catch(e){}
+  sel.value = saved; setReciterRadio(saved, false);
+  sel.addEventListener("click", e=>e.stopPropagation());
+  sel.addEventListener("change", ()=>setReciterRadio(sel.value, true));
+})();
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
   (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
 function applyRadioVol(){
@@ -1948,6 +1992,16 @@ document.querySelectorAll("#targetChips .tchip").forEach(c=>{
   c.addEventListener("click", ()=>setTargetChip(c.dataset.t==="custom"?"custom":Number(c.dataset.t)));
 });
 
+let chosenDColor = 0;
+function setDColor(v){
+  chosenDColor = +v||0;
+  document.querySelectorAll("#dColorRow .ay-c").forEach(c=>{
+    c.style.outline = (+c.dataset.dc===chosenDColor) ? "2.5px solid var(--gold-hi)" : "none";
+  });
+}
+document.querySelectorAll("#dColorRow .ay-c").forEach(c=>{
+  c.addEventListener("click", ()=>setDColor(c.dataset.dc));
+});
 function openEdit(id){
   editingId = id || null;
   pendingBg = undefined;
@@ -1960,8 +2014,9 @@ function openEdit(id){
     if([33,100,1000,0].includes(d.target)) setTargetChip(d.target);
     else { setTargetChip("custom"); $("fCustom").value = d.target; }
     if(d.hasBg){ getBg(id).then(v=>{ if(editingId===id && pendingBg===undefined) bgFieldUI(v); }); }
+    setDColor(d.color||0);
   } else {
-    $("fText").value=""; $("fCustom").value=""; setTargetChip(33);
+    $("fText").value=""; $("fCustom").value=""; setTargetChip(33); setDColor(0);
   }
   openLayer("editModal");
   setTimeout(()=>$("fText").focus(), 350);
@@ -1980,9 +2035,10 @@ $("btnSave").addEventListener("click", ()=>{
   if(editingId){
     targetD = state.adhkar.find(x=>x.id===editingId);
     targetD.text = text;
+    targetD.color = chosenDColor;
     if(targetD.target!==target){ targetD.target=target; targetD.cycle=0; }
   } else {
-    targetD = {id:uid(), text, target, cycle:0, rounds:0, today:0, total:0,
+    targetD = {id:uid(), text, target, color:chosenDColor, cycle:0, rounds:0, today:0, total:0,
       date:todayStr(), lastUsed:Date.now(), createdAt:Date.now()};
     state.adhkar.push(targetD);
     state.settings.activeId = targetD.id;
@@ -2183,7 +2239,7 @@ function updatePrayerPill(){
     const nowH = now.getHours()+now.getMinutes()/60+now.getSeconds()/3600;
     const times = prayerTimes(geo.lat, geo.lng, new Date(now.getFullYear(),now.getMonth(),now.getDate()), tz);
     let nextKey = null;
-    for(const k of PRAYER_ORDER){ if(times[k] > nowH){ nextKey = k; break; } }
+    for(const k of DISPLAY_ORDER){ if(times[k] > nowH){ nextKey = k; break; } }
     /* خلايا المواقيت (مع الإشراق) */
     const row = $("pRow"); row.innerHTML = "";
     for(const k of DISPLAY_ORDER){
@@ -2197,7 +2253,8 @@ function updatePrayerPill(){
     let leftTxt;
     if(nextKey){
       const mins = Math.max(0, Math.round((times[nextKey]-nowH)*60));
-      leftTxt = "باقي على أذان "+PRAYER_NAMES[nextKey]+" "+
+      const lbl = nextKey==="ishraq" ? "باقي على صلاة الإشراق" : "باقي على أذان "+PRAYER_NAMES[nextKey];
+      leftTxt = lbl+" "+
         (mins>=60 ? fmt(Math.floor(mins/60))+" س "+fmt(mins%60)+" د" : fmt(mins)+" دقيقة");
     }else{
       const tmr = prayerTimes(geo.lat, geo.lng, new Date(now.getFullYear(),now.getMonth(),now.getDate()+1), tz);
@@ -2211,7 +2268,7 @@ function updatePrayerPill(){
       const adhanKey = todayStr()+"-"+prevNextKey;
       if(lastAdhanKey!==adhanKey){
         lastAdhanKey = adhanKey;
-        showToast("حان الآن أذان "+PRAYER_NAMES[prevNextKey]+" 🕌");
+        showToast(prevNextKey==="ishraq" ? "حان الآن وقت صلاة الإشراق ☀️" : "حان الآن أذان "+PRAYER_NAMES[prevNextKey]+" 🕌");
         buzz([40,80,40]);
       }
     }
@@ -2921,7 +2978,10 @@ mvEl.addEventListener("click", e=>{
 let chromeT=null;
 function chromeTimer(){
   clearTimeout(chromeT);
-  chromeT = setTimeout(()=>$("mushaf").classList.add("zen"), 4500);
+  chromeT = setTimeout(()=>{
+    if($("qsPanel").classList.contains("open") || document.activeElement===$("qsInput")){ chromeTimer(); return; }
+    $("mushaf").classList.add("zen");
+  }, 4500);
 }
 function toggleChrome(){
   const z = $("mushaf").classList.toggle("zen");
@@ -2971,14 +3031,19 @@ function doSearch(){
   }
   if(q.length<2){ renderMarksList(); return; }
   ensureNorm();
-  const out = [];
-  for(let i=0;i<M.flat.length && out.length<60;i++){
-    if(M.normArr[i].indexOf(q)>=0) out.push(M.flat[i]);
+  const out = []; let hitCount = 0;
+  for(let i=0;i<M.flat.length;i++){
+    if(M.normArr[i].indexOf(q)>=0){ hitCount++; if(out.length<60) out.push(M.flat[i]); }
   }
   /* السور المطابقة تظهر أولاً */
   const surs = (M.surahs||[]).filter(x=> qNorm(x.name).indexOf(q)>=0 || qNorm(x.full).indexOf(q)>=0 );
   if(!out.length && !surs.length){ box.innerHTML = '<div class="qs-hint">لا نتائج — جرّب كلمة أخرى</div>'; return; }
   box.innerHTML = "";
+  if(hitCount>0){
+    const h = document.createElement("div"); h.className = "qs-hint";
+    h.innerHTML = 'وردت «'+esc(raw)+'» في <b>'+fmt(hitCount)+'</b> آية'+(hitCount>60?' — تُعرض أول ٦٠':'');
+    box.appendChild(h);
+  }
   surs.slice(0,8).forEach(x=>{
     const d = document.createElement("div"); d.className = "qs-item";
     d.innerHTML = '<div class="w">📖 سُورَةُ '+esc(x.name)+'</div><div class="rf">'+x.type+' · '+fmt(x.count)+' آية · تبدأ صفحة '+fmt(x.start)+'</div>';
@@ -3028,10 +3093,14 @@ function slTick(){
   }catch(e){}
 }
 let tipT=null;
+let slLive=null;
 $("mSlider").addEventListener("input", ()=>{
   if(!M.surahs) return;
   const p = +$("mSlider").value;
   if(p!==lastTickP){ lastTickP=p; slTick(); if(QP) ensureQcfFont(QP[p-1].f).catch(()=>{}); }
+  /* عرض حي للصفحة أثناء السحب — يجعل الوصول فورياً */
+  clearTimeout(slLive);
+  slLive = setTimeout(()=>{ if(QP && M.quran) renderPage(p); }, 150);
   $("mTip").textContent = surahForPage(p).name+" · صفحة "+fmt(p);
   $("mTip").classList.add("on");
   clearTimeout(tipT); tipT = setTimeout(()=>$("mTip").classList.remove("on"), 1400);
