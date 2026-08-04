@@ -73,7 +73,7 @@ body.has-bg .atmosphere::after{background:radial-gradient(120% 100% at 50% 45%, 
 /* ======== الرأس ======== */
 header{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 0;}
 .brand{display:flex;flex-direction:column;gap:1px}
-.brand h1{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1;color:var(--gold-hi);
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:40px;line-height:1;color:var(--gold-hi);
   text-shadow:0 1px 0 rgba(255,255,255,.6);letter-spacing:.5px}
 .brand small{font-size:10.5px;color:var(--muted);letter-spacing:.4px}
 .icon-btn{width:42px;height:42px;border-radius:14px;border:1px solid var(--card-b);
@@ -83,7 +83,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
 .hdr-actions{display:flex;gap:8px}
 
 .ayah{font-family:var(--f-display);text-align:center;color:var(--muted);
-  font-size:14.5px;margin:8px 0 2px;line-height:1.9;opacity:.85}
+  font-size:16.5px;margin:8px 0 2px;line-height:1.9;opacity:.85}
 .ayah em{color:var(--gold);font-style:normal}
 
 /* ======== منطقة الذكر النشط ========
@@ -340,7 +340,7 @@ html.dark .dph{border-color:rgba(201,196,142,.4);background:rgba(201,196,142,.07
   .reveal{opacity:1;transform:none}
 }
 @media (max-height:640px){
-  .brand h1{font-size:27px}.ayah{display:none}
+  .brand h1{font-size:32px}.ayah{display:none}
   .count{font-size:clamp(52px,17vw,74px)}
   .tap-zone{width:min(64vw,250px)}
 }
@@ -552,10 +552,10 @@ html.dark .ay-c{border-color:rgba(255,255,255,.18)}
 .rec-item.on{color:var(--gold-hi);font-weight:700}
 .rec-item.on::after{content:"✓";color:var(--gold)}
 .qs-res{max-height:48vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.qs-item{padding:11px 8px;border-bottom:1px solid rgba(110,108,68,.12);cursor:pointer}
-.qs-item .w{font-family:'Amiri Quran','Amiri',serif;font-size:17.5px;line-height:1.9;color:var(--ink)}
+.qs-item{padding:13px 10px;border-bottom:1px solid rgba(110,108,68,.12);cursor:pointer}
+.qs-item .w{font-family:'Amiri Quran','Amiri',serif;font-size:21px;line-height:2;color:var(--ink)}
 .qs-item .w b{color:var(--gold-hi);background:var(--gold-dim);border-radius:4px;padding:0 2px}
-.qs-item .rf{font-size:11.5px;color:var(--gold);margin-top:3px;font-weight:600}
+.qs-item .rf{font-size:13px;color:var(--gold);margin-top:4px;font-weight:600}
 .qs-hint{font-size:12.5px;color:var(--muted);text-align:center;padding:14px 0}
 
 
@@ -2697,16 +2697,35 @@ async function buildPageHTML(p, noAnim){
   return h;
 }
 async function renderPageAuthentic(p){
-  const h = await buildPageHTML(p, false);
-  if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
-  $("mView").innerHTML = h;
-  $("mView").classList.add("lock");
+  const mv = $("mView");
+  const cached = pageFastCache[p];
+  let h;
+  if(cached){
+    h = cached.html;
+    /* إن كانت هذه الصفحة معروضة فعلاً بنفس المحتوى (رسمها السحب فوراً قبل قليل)
+       فلا داعي لأي لمس لـ innerHTML — هذا بالضبط ما يمنع الوميض/التأخر بعد
+       الإفلات؛ نكتفي بإكمال القياس الدقيق أدناه لتحسين الحجم النهائي بهدوء */
+    if(mv.dataset.curPage!==String(p) || !mv.querySelector(".q-page15")){
+      mv.innerHTML = h;
+      mv.dataset.curPage = String(p);
+      mv.classList.add("lock");
+      const inner = mv.querySelector(".q-page-inner15");
+      if(inner){ if(cached.qfs) inner.style.setProperty("--qfs", cached.qfs); else fitPageBase(mv, inner); }
+    }
+  }else{
+    h = await buildPageHTML(p, false);
+    if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
+    mv.innerHTML = h;
+    mv.dataset.curPage = String(p);
+    mv.classList.add("lock");
+  }
+  if(M.prefs.page!==p) return;
   fitPage();
   /* بعد استقرار القياس الدقيق، حدّث الذاكرة المؤقتة بمقاس الخط النهائي
      ليصبح التنقل لهذه الصفحة لاحقاً (بالسحب أو غيره) فورياً بلا إعادة قياس */
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     if(M.prefs.page!==p) return;
-    const inner=$("mView").querySelector(".q-page-inner15");
+    const inner=mv.querySelector(".q-page-inner15");
     if(inner) pageFastCache[p] = {html:h, qfs: inner.style.getPropertyValue("--qfs")};
   }));
 }
@@ -2719,25 +2738,58 @@ async function renderPageDrag(p){
   const mv = $("mView");
   if(cached){
     mv.innerHTML = cached.html;
+    mv.dataset.curPage = String(p);
     mv.classList.add("lock");
     const inner = mv.querySelector(".q-page-inner15");
     if(inner){ if(cached.qfs) inner.style.setProperty("--qfs", cached.qfs); else fitPageBase(mv, inner); }
+    prefetchAround(p);
     return;
   }
   const h = await buildPageHTML(p, true);
   if(my!==dragSeq) return; /* تجاوزها السحب إلى صفحة أخرى، لا داعي لعرضها */
   mv.innerHTML = h;
+  mv.dataset.curPage = String(p);
   mv.classList.add("lock");
   const inner = mv.querySelector(".q-page-inner15");
   let fs = null;
   if(inner) fs = fitPageBase(mv, inner);
   pageFastCache[p] = {html:h, qfs: (fs!=null)?fs.toFixed(2)+"px":null};
+  prefetchAround(p);
+}
+/* تسخين الذاكرة المؤقتة للصفحات المجاورة في الخلفية أثناء التوقف اللحظي
+   بين حركات السحب — يرفع احتمال أن تكون الصفحة التي سيُفلت المستخدم إصبعه
+   عندها جاهزة مسبقاً، فلا يظهر أي تأخير بعد الإفلات مطلقاً */
+let prefetchBusy = false;
+async function prefetchAround(p){
+  if(prefetchBusy || !QP) return;
+  prefetchBusy = true;
+  try{
+    const targets = [p+1, p-1, p+2, p-2].filter(q=>q>=1 && q<=604 && !pageFastCache[q]);
+    for(const q of targets){
+      if(pageFastCache[q]) continue;
+      const h = await buildPageHTML(q, true);
+      if(!pageFastCache[q]) pageFastCache[q] = {html:h, qfs:null};
+    }
+  }catch(e){}
+  prefetchBusy = false;
 }
 async function renderPage(p){
   p = Math.max(1, Math.min(604, p));
   M.prefs.page = p; M.prefs.mode = "pages";
   const list = M.byPage[p]||[];
   if(list.length) M.prefs.surah = list[0].s;
+  /* إن كانت هذه الصفحة محفوظة مسبقاً بالذاكرة المؤقتة (كأن تكون زُرناها أثناء
+     سحب الشريط) اعرضها فوراً بلا أي تأخير محسوس، ثم يكمل الكود أدناه الضبط
+     الدقيق في الخلفية — هذا هو ما يمنع "التأخر بعد إفلات الإصبع" */
+  const preCached = pageFastCache[p];
+  if(preCached){
+    const mv0 = $("mView");
+    mv0.innerHTML = preCached.html;
+    mv0.dataset.curPage = String(p);
+    mv0.classList.add("lock");
+    const inner0 = mv0.querySelector(".q-page-inner15");
+    if(inner0){ if(preCached.qfs) inner0.style.setProperty("--qfs", preCached.qfs); else fitPageBase(mv0, inner0); }
+  }
   /* سباق: إن جهزت الصفحة المطبوعة خلال ٣٥٠م.ث اعرضها فوراً،
      وإلا اعرض النص مباشرة ثم استبدله بالمطبوع فور اكتماله */
   let authDone = false;
