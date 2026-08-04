@@ -86,16 +86,20 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
   font-size:14.5px;margin:8px 0 2px;line-height:1.9;opacity:.85}
 .ayah em{color:var(--gold);font-style:normal}
 
-/* ======== منطقة الذكر النشط ======== */
+/* ======== منطقة الذكر النشط ========
+   ارتفاع ثابت دائماً مهما اختلف طول نص الذكر — لا يتحرك أي عنصر حوله؛
+   حجم الخط نفسه هو المرن (يصغر تلقائياً عبر JS إن احتاج نص طويل لذلك) */
 .active-dhikr{text-align:center;margin-top:6px;cursor:pointer}
 .active-dhikr .txt{font-family:var(--f-display);font-size:clamp(21px,6vw,27px);color:var(--ink);
-  line-height:1.7;transition:opacity .4s var(--ease)}
+  line-height:1.7;transition:opacity .4s var(--ease);text-align:center;
+  height:148px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .active-dhikr .hint{font-size:11px;color:var(--faint);margin-top:2px;display:flex;align-items:center;justify-content:center;gap:5px}
 .active-dhikr .hint::before,.active-dhikr .hint::after{content:"";width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--faint))}
 .active-dhikr .hint::after{background:linear-gradient(-90deg,transparent,var(--faint))}
 
 /* ======== العدّاد الدائري ======== */
-.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:190px;position:relative}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:190px;position:relative;
+  padding-top:10px}
 .tap-zone{position:relative;height:min(78vw,320px);max-height:100%;aspect-ratio:1;cursor:pointer;touch-action:manipulation;
   display:grid;place-items:center;border-radius:50%;flex:0 1 auto;min-height:150px}
 .tap-zone svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
@@ -185,6 +189,18 @@ html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
 .dcard .edit{width:30px;height:30px;border-radius:10px;border:none;background:rgba(110,108,68,.10);
   color:var(--faint);cursor:pointer;font-size:14px;display:grid;place-items:center}
 .dcard .mini-bar{height:3px;border-radius:2px;background:rgba(110,108,68,.14);margin-top:9px;overflow:hidden}
+.dgrip{display:none}
+.dhikr-list.manual .dcard{padding-inline-end:40px}
+.dhikr-list.manual .dgrip{display:flex}
+.dgrip{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);width:28px;height:40px;
+  align-items:center;justify-content:center;color:var(--faint);cursor:grab;touch-action:none;font-size:19px;
+  border-radius:9px;letter-spacing:-2px}
+.dgrip:active{cursor:grabbing;background:rgba(110,108,68,.12)}
+html.dark .dgrip:active{background:rgba(201,196,142,.14)}
+.dghost{position:fixed;z-index:999;pointer-events:none;opacity:.94;box-shadow:0 12px 30px rgba(0,0,0,.3);
+  border-radius:18px;will-change:transform}
+.dph{border:2px dashed rgba(110,108,68,.4);border-radius:18px;background:rgba(110,108,68,.06)}
+html.dark .dph{border-color:rgba(201,196,142,.4);background:rgba(201,196,142,.07)}
 .dcard.dc1{border-inline-start:4px solid #EFCB46}.dcard.dc2{border-inline-start:4px solid #7DC37D}
 .dcard.dc3{border-inline-start:4px solid #7AA5EB}.dcard.dc4{border-inline-start:4px solid #EE91A5}
 .dcard.dc5{border-inline-start:4px solid #C391EE}
@@ -471,6 +487,7 @@ html.dark .q-page-inner{border-color:rgba(201,196,142,.25)}
   -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .q-a.tapsel{background:var(--gold-dim)}
 .q-page{animation:pageIn .24s var(--ease);--pgx:-14px}
+.q-page.noanim{animation:none}
 @keyframes pageIn{from{opacity:.3;transform:translateX(var(--pgx))}to{opacity:1;transform:none}}
 .q-a.playing{background:var(--gold-dim);box-shadow:0 0 0 1.5px rgba(110,108,68,.5)}
 html.dark .q-a.playing{box-shadow:0 0 0 1.5px rgba(201,196,142,.5)}
@@ -1070,7 +1087,7 @@ function freshState(){
     firstUse: Date.now(),
     adhkar: DEFAULT_ADHKAR.map((d,i)=>({
       id:uid()+i, text:d.text, target:d.target, builtin:true,
-      cycle:0, rounds:0, today:0, total:0,
+      cycle:0, rounds:0, today:0, total:0, order:i,
       date:todayStr(), lastUsed:0, createdAt:Date.now()+i
     })),
     settings:{haptics:true, sound:true, autoAdvance:false, arabicNums:true, dark:false, sort:"manual", activeId:null},
@@ -1110,6 +1127,13 @@ async function loadState(){
           cycle:0, rounds:0, today:0, total:0, date:todayStr(), lastUsed:0, createdAt:Date.now()+i});
       }
     });
+  }catch(e){}
+  /* ترحيل: امنح كل ذِكر ترتيباً يدوياً رقمياً إن لم يكن لديه (يحافظ على ترتيبه
+     الحالي كما هو أول مرة تُشغَّل فيها ميزة السحب لإعادة الترتيب) */
+  try{
+    if(state.adhkar.some(d=>d.order===undefined)){
+      state.adhkar.forEach((d,i)=>{ if(d.order===undefined) d.order=i; });
+    }
   }catch(e){}
   if(!state.adhkar.find(d=>d.id===state.settings.activeId)){
     state.settings.activeId = state.adhkar[0].id;
@@ -1208,6 +1232,23 @@ const ringFill = $("ringFill");
 ringFill.style.strokeDasharray = CIRC;
 ringFill.style.strokeDashoffset = CIRC;
 
+/* يُصغّر خط نص الذكر تلقائياً فقط إن كان طويلاً بما يتجاوز مساحته الثابتة
+   (بدل أن تتمدد المساحة نفسها وتحرّك بقية عناصر الواجهة) */
+function fitDhikrText(){
+  const txt = $("activeTxt");
+  if(!txt) return;
+  txt.style.fontSize = "";
+  const maxH = txt.clientHeight;
+  if(!maxH) return;
+  let size = parseFloat(getComputedStyle(txt).fontSize);
+  const minSize = 15;
+  let guard = 0;
+  while(txt.scrollHeight > maxH + 1 && size > minSize && guard < 24){
+    size -= 1;
+    txt.style.fontSize = size+"px";
+    guard++;
+  }
+}
 function renderCounter(pulse){
   const d = active();
   const num = $("countNum");
@@ -1219,10 +1260,12 @@ function renderCounter(pulse){
   const p = d.target>0 ? (d.cycle/d.target) : (d.today>0 ? 1 : 0);
   ringFill.style.strokeDashoffset = CIRC * (1 - Math.min(1,p));
   $("activeTxt").textContent = d.text;
+  fitDhikrText();
   renderBeads(d);
   renderStats();
   applyBg();
 }
+window.addEventListener("resize", ()=>fitDhikrText());
 
 function renderBeads(d){
   const box = $("beads");
@@ -1256,16 +1299,18 @@ function sortedAdhkar(){
   else if(m==="today") a.sort((x,y)=>y.today-x.today);
   else if(m==="recent") a.sort((x,y)=>y.lastUsed-x.lastUsed);
   else if(m==="alpha") a.sort((x,y)=>x.text.localeCompare(y.text,"ar"));
-  else a.sort((x,y)=>x.createdAt-y.createdAt);
+  else a.sort((x,y)=>(x.order??x.createdAt)-(y.order??y.createdAt));
   return a;
 }
 
 function renderList(){
   const list = $("dhikrList");
+  list.classList.toggle("manual", state.settings.sort==="manual");
   list.innerHTML = "";
   sortedAdhkar().forEach(d=>{
     const card = document.createElement("div");
     card.className = "dcard"+(d.id===state.settings.activeId?" active":"")+(d.color?" dc"+d.color:"");
+    card.dataset.id = d.id;
     const pct = d.target>0 ? Math.min(100, Math.round(d.cycle/d.target*100)) : (d.today>0?100:0);
     card.innerHTML =
       '<div class="name">'+escapeHtml(d.text)+'</div>'+
@@ -1280,8 +1325,10 @@ function renderList(){
         '<button class="abtn edit-act" aria-label="تعديل">✎ تعديل</button>'+
         (d.builtin ? '' : '<button class="abtn del-act del" aria-label="حذف">🗑 حذف</button>')+
       '</div>'+
-      '<div class="mini-bar"><i style="width:'+pct+'%"></i></div>';
+      '<div class="mini-bar"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="dgrip" aria-label="اسحب لإعادة الترتيب">⠿</div>';
     card.addEventListener("click", e=>{
+      if(e.target.closest(".dgrip")) return;
       if(e.target.closest(".del")){
         if(d.builtin){ showToast("الأذكار الأساسية لا تُحذف — يمكن تعديلها فقط"); return; }
         if(state.adhkar.length<=1){ showToast("لا يمكن حذف آخر ذِكر"); return; }
@@ -1302,10 +1349,69 @@ function renderList(){
       closeLayer("panel");
     });
     list.appendChild(card);
+    attachDragReorder(card, card.querySelector(".dgrip"));
   });
   document.querySelectorAll("#sortRow .chip").forEach(c=>{
     c.classList.toggle("on", c.dataset.sort===state.settings.sort);
   });
+}
+
+/* سحب وإفلات لإعادة ترتيب الأذكار يدوياً (وضعية "ترتيبي" فقط) */
+function attachDragReorder(card, grip){
+  if(!grip) return;
+  let ghost=null, placeholder=null, startY=0, startX=0, startRect=null, dragging=false, moved=false;
+  const listEl = $("dhikrList");
+  grip.addEventListener("click", e=>e.stopPropagation());
+  grip.addEventListener("pointerdown", e=>{
+    if(state.settings.sort!=="manual") return;
+    e.preventDefault(); e.stopPropagation();
+    dragging = true; moved = false;
+    startY = e.clientY; startX = e.clientX;
+    startRect = card.getBoundingClientRect();
+    ghost = card.cloneNode(true);
+    ghost.classList.add("dghost");
+    ghost.style.width = startRect.width+"px";
+    ghost.style.height = startRect.height+"px";
+    ghost.style.left = startRect.left+"px";
+    ghost.style.top = startRect.top+"px";
+    document.body.appendChild(ghost);
+    placeholder = document.createElement("div");
+    placeholder.className = "dph";
+    placeholder.style.height = startRect.height+"px";
+    card.style.visibility = "hidden";
+    card.parentNode.insertBefore(placeholder, card);
+    try{ grip.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  grip.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if(Math.abs(dx)>3 || Math.abs(dy)>3) moved = true;
+    ghost.style.transform = "translate("+dx+"px,"+dy+"px)";
+    const siblings = [...listEl.children].filter(c=>c!==placeholder && c!==card);
+    let placed = false;
+    for(const sib of siblings){
+      const r = sib.getBoundingClientRect();
+      if(e.clientY < r.top + r.height/2){ listEl.insertBefore(placeholder, sib); placed=true; break; }
+    }
+    if(!placed) listEl.appendChild(placeholder);
+  });
+  const finish = e=>{
+    if(!dragging) return;
+    dragging = false;
+    if(ghost){ ghost.remove(); ghost=null; }
+    if(placeholder){
+      placeholder.parentNode.insertBefore(card, placeholder);
+      placeholder.remove(); placeholder=null;
+    }
+    card.style.visibility = "";
+    if(moved){
+      const ids = [...listEl.querySelectorAll(".dcard")].map(c=>c.dataset.id);
+      ids.forEach((id,i)=>{ const dd=state.adhkar.find(x=>x.id===id); if(dd) dd.order=i; });
+      save();
+    }
+  };
+  grip.addEventListener("pointerup", finish);
+  grip.addEventListener("pointercancel", finish);
 }
 
 function escapeHtml(s){
@@ -1383,11 +1489,20 @@ function doTap(x,y){
 
   let roundDone = false;
   if(d.target>0 && d.cycle>=d.target){
-    d.cycle = 0; d.rounds++;
+    d.rounds++;
     roundDone = true;
+    /* أظهر الرقم المستهدف نفسه (١٠٠ مثلاً) أولاً بدل القفز مباشرة للصفر،
+       ثم صفّره بعد لحظة احتفاء قصيرة استعداداً لدورة جديدة */
   }
   renderCounter(true);
   save();
+  if(roundDone){
+    setTimeout(()=>{
+      d.cycle = 0;
+      renderCounter(false);
+      save();
+    }, 850);
+  }
 
   /* الهدف بلا حدّ: ومضة كل ١٠٠ تسبيحة */
   if(d.target===0 && d.today>0 && d.today%100===0){
@@ -2056,7 +2171,8 @@ $("btnSave").addEventListener("click", ()=>{
     targetD.color = chosenDColor;
     if(targetD.target!==target){ targetD.target=target; targetD.cycle=0; }
   } else {
-    targetD = {id:uid(), text, target, color:chosenDColor, cycle:0, rounds:0, today:0, total:0,
+    const maxOrder = state.adhkar.reduce((m,x)=>Math.max(m, x.order??0), -1);
+    targetD = {id:uid(), text, target, color:chosenDColor, cycle:0, rounds:0, today:0, total:0, order:maxOrder+1,
       date:todayStr(), lastUsed:Date.now(), createdAt:Date.now()};
     state.adhkar.push(targetD);
     state.settings.activeId = targetD.id;
@@ -2505,15 +2621,17 @@ function lineRunsHTML(L, fam){
   }).join('');
 }
 /* ضبط مقاس الصفحة لتملأ الشاشة تماماً — بلا أي تمرير */
-function fitPage(){
-  const mv=$("mView"), inner=mv.querySelector(".q-page-inner15");
-  if(!inner) return;
+/* الحساب الأساسي لمقاس الخط (بلا أي قياس/Reflow) — رخيص جداً، يُستخدم أثناء
+   السحب السريع على الشريط حتى لا يثقل التمرير؛ يليه لاحقاً fitPage() الكامل
+   لضبط التفاصيل الدقيقة عند استقرار الصفحة */
+function fitPageBase(mv, inner){
   const centered = !!mv.querySelector(".q-page15.centered");
   if(centered){
     inner.style.height="";
     const wc = inner.clientWidth - 24;
-    inner.style.setProperty("--qfs", Math.min(wc*0.062, 30).toFixed(2)+"px");
-    return;
+    const fs = Math.min(wc*0.062, 30);
+    inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
+    return fs;
   }
   const page = mv.querySelector(".q-page15");
   const phd = page.querySelector(".q-phead"), pnm = page.querySelector(".q-pnum");
@@ -2525,6 +2643,13 @@ function fitPage(){
   const fs = Math.min(w*0.0555, avail/lines/1.74);
   inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
   inner.style.height = Math.max(avail, 200)+"px";
+  return fs;
+}
+function fitPage(){
+  const mv=$("mView"), inner=mv.querySelector(".q-page-inner15");
+  if(!inner) return;
+  const fs = fitPageBase(mv, inner);
+  if(mv.querySelector(".q-page15.centered")) return;
   requestAnimationFrame(()=>{
     /* الأسطر القصيرة (أواخر السور) تتوسط كالمصحف بدل التمدد */
     const cands = [...inner.querySelectorAll(".q-line")].filter(l=>!l.classList.contains("qcen"));
@@ -2549,27 +2674,64 @@ function fitPage(){
 }
 /* --- بناء صفحة مطابقة للمصحف المطبوع: ١٥ سطراً بالتقسيم الرسمي --- */
 let lastPageN = 0;
-async function renderPageAuthentic(p){
+/* ذاكرة مؤقتة لكل صفحة (HTML الجاهز + مقاس الخط) — تجعل العودة لصفحة
+   زُرناها من قبل فورية بلا أي إعادة بناء، وهذا هو مفتاح خفّة شريط التنقل */
+const pageFastCache = {};
+async function buildPageHTML(p, noAnim){
   const data = await loadQcfData();
   const pg = data[p-1];
   const needQb = pg.l.some(L=>L.some(g=>g[1]===1 || g[2]==="b" || g[2]==="s"));
   const loads=[ensureQcfFont(pg.f)]; if(needQb) loads.push(ensureQcfFont("QCF4_QBSML"));
   await Promise.all(loads);
-  if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
   const dir = (p>=lastPageN) ? "-14px" : "14px"; lastPageN = p;
   const list = (M.byPage||{})[p]||[];
   const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
   const phead = '<div class="q-phead"><b>'+(names?"سُورَةُ "+names:"")+'</b><span>الجزء '+fmt(list.length?list[0].juz:1)+'</span></div>';
-  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+'" style="--pgx:'+dir+'">'+phead+'<div class="q-page-inner15">';
+  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+(noAnim?" noanim":"")+'" style="--pgx:'+dir+'">'+phead+'<div class="q-page-inner15">';
   pg.l.forEach(L=>{
     const hasS = L.some(g=>g[2]==="s");
     const center = p<=2 || hasS || L.some(g=>g[2]==="b");
     h += '<div class="q-line'+(center?' qcen':'')+(hasS?' q-shline':'')+'">'+lineRunsHTML(L, pg.f)+'</div>';
   });
   h += '</div><div class="q-pnum">— '+fmt(p)+' —</div></div>';
+  return h;
+}
+async function renderPageAuthentic(p){
+  const h = await buildPageHTML(p, false);
+  if(M.prefs.page!==p) return; /* تغيّرت الصفحة أثناء التحميل */
   $("mView").innerHTML = h;
   $("mView").classList.add("lock");
   fitPage();
+  /* بعد استقرار القياس الدقيق، حدّث الذاكرة المؤقتة بمقاس الخط النهائي
+     ليصبح التنقل لهذه الصفحة لاحقاً (بالسحب أو غيره) فورياً بلا إعادة قياس */
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(M.prefs.page!==p) return;
+    const inner=$("mView").querySelector(".q-page-inner15");
+    if(inner) pageFastCache[p] = {html:h, qfs: inner.style.getPropertyValue("--qfs")};
+  }));
+}
+/* عرض سريع أثناء سحب شريط التنقل — من الذاكرة المؤقتة إن وُجدت (فوري تماماً)،
+   وإلا ببناء أخفّ بلا أي قياس/Reflow حتى لا يثقل التمرير */
+let dragSeq = 0;
+async function renderPageDrag(p){
+  const my = ++dragSeq;
+  const cached = pageFastCache[p];
+  const mv = $("mView");
+  if(cached){
+    mv.innerHTML = cached.html;
+    mv.classList.add("lock");
+    const inner = mv.querySelector(".q-page-inner15");
+    if(inner){ if(cached.qfs) inner.style.setProperty("--qfs", cached.qfs); else fitPageBase(mv, inner); }
+    return;
+  }
+  const h = await buildPageHTML(p, true);
+  if(my!==dragSeq) return; /* تجاوزها السحب إلى صفحة أخرى، لا داعي لعرضها */
+  mv.innerHTML = h;
+  mv.classList.add("lock");
+  const inner = mv.querySelector(".q-page-inner15");
+  let fs = null;
+  if(inner) fs = fitPageBase(mv, inner);
+  pageFastCache[p] = {html:h, qfs: (fs!=null)?fs.toFixed(2)+"px":null};
 }
 async function renderPage(p){
   p = Math.max(1, Math.min(604, p));
@@ -3112,20 +3274,27 @@ function slTick(){
     tickCtx = tickCtx || new (window.AudioContext||window.webkitAudioContext)();
     if(tickCtx.state==="suspended") tickCtx.resume();
     const t=tickCtx.currentTime, o=tickCtx.createOscillator(), g=tickCtx.createGain();
-    o.type="sine"; o.frequency.setValueAtTime(820,t);
-    g.gain.setValueAtTime(0.0028,t); g.gain.exponentialRampToValueAtTime(0.00006,t+0.06);
-    o.connect(g); g.connect(tickCtx.destination); o.start(t); o.stop(t+0.065);
+    o.type="sine"; o.frequency.setValueAtTime(760,t);
+    g.gain.setValueAtTime(0.0016,t); g.gain.exponentialRampToValueAtTime(0.00005,t+0.045);
+    o.connect(g); g.connect(tickCtx.destination); o.start(t); o.stop(t+0.05);
   }catch(e){}
 }
 let tipT=null;
-let slLive=null;
+let slRafP=null, slRafPending=false;
+function slFlush(){
+  slRafPending=false;
+  const p = slRafP;
+  if(p==null) return;
+  if(QP && M.quran) renderPageDrag(p);
+}
 $("mSlider").addEventListener("input", ()=>{
   if(!M.surahs) return;
   const p = +$("mSlider").value;
   if(p!==lastTickP){ lastTickP=p; slTick(); if(QP) ensureQcfFont(QP[p-1].f).catch(()=>{}); }
-  /* عرض حي للصفحة أثناء السحب — يجعل الوصول فورياً */
-  clearTimeout(slLive);
-  slLive = setTimeout(()=>{ if(QP && M.quran) renderPage(p); }, 90);
+  /* عرض حي للصفحة أثناء السحب — مؤطّر مع كل إطار رسم (بلا أي تأخير زمني ثابت)
+     ومن الذاكرة المؤقتة غالباً، فيكون فورياً وخفيفاً حتى في السحب السريع جداً */
+  slRafP = p;
+  if(!slRafPending){ slRafPending=true; requestAnimationFrame(slFlush); }
   $("mTip").textContent = surahForPage(p).name+" · صفحة "+fmt(p);
   $("mTip").classList.add("on");
   clearTimeout(tipT); tipT = setTimeout(()=>$("mTip").classList.remove("on"), 1400);
