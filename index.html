@@ -189,9 +189,9 @@ html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
 .dcard.active{border-color:rgba(110,108,68,.45);background:linear-gradient(135deg,var(--gold-dim),var(--card))}
 .dcard.active::before{content:"";position:absolute;inset-inline-start:0;top:14px;bottom:14px;width:3px;border-radius:3px;
   background:var(--gold);box-shadow:0 0 10px rgba(110,108,68,.7)}
-.dcard .name{font-family:var(--f-display);font-size:17.5px;color:var(--ink);line-height:1.55}
+.dcard .name{font-family:var(--f-display);font-size:19.5px;color:var(--ink);line-height:1.5}
 .dcard .row2{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
-.dcard .nums{display:flex;gap:12px;font-size:11.5px;color:var(--muted)}
+.dcard .nums{display:flex;gap:12px;font-size:13.5px;color:var(--muted)}
 .dcard .nums b{color:var(--gold);font-weight:600;font-variant-numeric:tabular-nums}
 .dcard .edit{width:30px;height:30px;border-radius:10px;border:none;background:rgba(110,108,68,.10);
   color:var(--faint);cursor:pointer;font-size:14px;display:grid;place-items:center}
@@ -442,7 +442,6 @@ html.dark #flashFx{background:radial-gradient(130% 130% at 50% 42%, rgba(232,227
 html.dark .p-cell.next{border-color:rgba(201,196,142,.5)}
 
 /* ======== أزرار إجراءات الذكر (تعديل/حذف) ======== */
-.dcard .nums{font-size:12.5px}
 .dcard .acts{display:flex;gap:9px;margin-top:11px}
 .abtn{height:36px;padding:0 18px;border-radius:12px;font-family:var(--f-ui);font-size:13.5px;
   font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
@@ -2666,7 +2665,7 @@ function ensureQcfFont(n){
    خللاً جوهرياً: كانت المصفوفة السابقة تضم ١١٣ قيمة فقط بدل ١١٤، ما جعل آخر
    سورة (سورة الناس) تستخدم قيمة افتراضية عامة غير دقيقة لها — وهذا بالتحديد
    يفسّر لماذا بقيت بعض البراويز غير متوازنة تماماً رغم الضبط السابق */
-const SH_OFFSETS=[-0.1016,-0.0859,-0.0156,-0.1016,-0.0547,-0.0234,0.0078,-0.0391,-0.0781,-0.0625,-0.0625,-0.0547,-0.0938,-0.1094,-0.0391,-0.0859,-0.0938,-0.0391,-0.0547,-0.0469,-0.0234,-0.0781,-0.0859,-0.0938,-0.0703,-0.0859,-0.0859,-0.0938,-0.0625,-0.1094,-0.0312,-0.0625,-0.0781,-0.1016,-0.0781,-0.0547,-0.0625,-0.0859,-0.0781,-0.0625,-0.0625,-0.0703,-0.0938,-0.0859,-0.0469,-0.0078,-0.0859,-0.1641,-0.0859,-0.0547,-0.0234,-0.0781,-0.0703,-0.0547,-0.0625,-0.0781,-0.0781,-0.0625,-0.0625,-0.0781,-0.0703,-0.0547,-0.1094,-0.1172,-0.0156,-0.0859,-0.0156,-0.0625,-0.0703,-0.0703,-0.0703,-0.0859,-0.0703,-0.0703,-0.0859,-0.1172,0.0,-0.1328,-0.0703,-0.0547,-0.0781,-0.1016,-0.0625,-0.0625,-0.0859,-0.0781,-0.0703,-0.0547,-0.0625,-0.0312,-0.0469,0.0391,-0.0938,-0.0625,-0.0938,-0.0625,-0.0781,-0.1328,-0.0312,-0.0469,-0.0781,-0.0547,-0.0547,-0.0703,-0.0625,-0.0547,-0.0859,-0.0234,-0.0156,-0.0859,-0.0703,-0.0391,-0.0547,-0.0547];
+const SH_OFFSETS=[-0.1098,-0.1142,-0.0483,-0.1175,-0.0797,-0.0541,-0.0236,-0.0654,-0.0963,-0.0855,-0.0858,-0.0850,-0.1078,-0.1170,-0.0653,-0.1040,-0.1043,-0.0698,-0.0812,-0.0671,-0.0472,-0.0933,-0.1101,-0.1135,-0.0730,-0.1042,-0.1047,-0.1141,-0.0793,-0.1375,-0.0581,-0.0817,-0.0960,-0.1135,-0.0927,-0.0722,-0.0828,-0.1085,-0.0941,-0.0687,-0.0885,-0.0923,-0.1073,-0.1076,-0.0719,-0.0437,-0.1079,-0.1707,-0.1072,-0.0782,-0.0370,-0.0960,-0.0940,-0.0828,-0.0818,-0.0998,-0.0873,-0.0899,-0.0841,-0.0968,-0.0905,-0.0794,-0.1310,-0.1359,-0.0432,-0.1063,-0.0432,-0.0824,-0.0992,-0.0857,-0.0828,-0.1069,-0.0919,-0.0927,-0.0828,-0.0918,-0.0273,-0.1450,-0.0925,-0.0677,-0.0944,-0.1237,-0.0772,-0.0712,-0.1005,-0.0972,-0.0901,-0.0540,-0.0674,-0.0568,-0.0561,0.0051,-0.1168,-0.0735,-0.1009,-0.0947,-0.0954,-0.1545,-0.0608,-0.0621,-0.0963,-0.0690,-0.0786,-0.0959,-0.0843,-0.0790,-0.0949,-0.0535,-0.0473,-0.0912,-0.0907,-0.0662,-0.0818,-0.0742];
 function shOffsetFor(cp){ const i=cp-0xF100; const v=SH_OFFSETS[i]; return (v===undefined)?-0.066:v; }
 /* سطر المصحف: تُجمَّع كلمات الآية الواحدة في كتلة واحدة متصلة
    حتى يشمل التظليل والتلوين الآية كاملة لا كلمةً كلمة */
@@ -2716,32 +2715,45 @@ function fitPageBase(mv, inner){
   inner.style.height = Math.max(avail, 200)+"px";
   return fs;
 }
+/* منطق توسيط الأسطر القصيرة (أواخر السور) + ضمانة عدم تجاوز العرض — مُستخرج
+   في دالة مشتركة لتُستخدم في كل مسار يبني صفحة جديدة (العرض الحيّ وأيضاً أول
+   بناء لصفحة أثناء معاينة السحب)، بحيث تُخبَز الحالة الصحيحة في أول رسمة
+   للصفحة أينما ظهرت أول مرة، فلا يُرى أي تصحيح متأخر مهما كان مسار الوصول
+   إليها لاحقاً (سواء من الذاكرة المؤقتة أو غيرها) */
+function applyLineFit(mv, inner, fs){
+  if(mv.querySelector(".q-page15.centered")) return;
+  /* حاسمة لمنع "الانكماش ثم الاستقرار" أثناء تقليب الصفحات: هذا القياس كان
+     مؤجَّلاً عبر requestAnimationFrame، أي أن المتصفح كان يرسم الصفحة أولاً
+     بحالتها الأولية (كل الأسطر ممدودة بالكامل) ثم يعيد رسمها بعد إطار كامل
+     بحالتها الصحيحة (الأسطر القصيرة متوسطة) — وهذه هي بالضبط القفزة المرئية
+     المزعجة. القياس هنا لا يحتاج فعلياً انتظار إطار رسم: قراءة offsetWidth
+     تفرض حساب التخطيط فوراً وبشكل متزامن، فتنفيذ كل هذا مباشرة (بلا rAF)
+     يجعل المتصفح يرسم الحالة النهائية الصحيحة من أول رسمة فقط — سلس تماماً
+     وأسرع أيضاً (يوفّر دورة رسم كاملة كانت تُهدر سابقاً) */
+  const cands = [...inner.querySelectorAll(".q-line")].filter(l=>!l.classList.contains("qcen"));
+  cands.forEach(l=>{ l.classList.remove("qshort"); l.classList.add("qmeasure"); });
+  void inner.offsetWidth;
+  cands.forEach(l=>{
+    const kids=[...l.children];
+    const nat = kids.reduce((a,k)=>a+k.getBoundingClientRect().width,0);
+    l.classList.remove("qmeasure");
+    if(kids.length && nat < l.clientWidth*0.82) l.classList.add("qshort");
+  });
+  /* ضمانة: لا تجاوز عرضي أبداً */
+  let over = 1;
+  inner.querySelectorAll(".q-line").forEach(l=>{
+    if(l.scrollWidth > l.clientWidth+1) over = Math.max(over, l.scrollWidth/l.clientWidth);
+  });
+  if(over>1.003){
+    const cur = parseFloat(inner.style.getPropertyValue("--qfs"))||fs;
+    inner.style.setProperty("--qfs", (cur/over*0.99).toFixed(2)+"px");
+  }
+}
 function fitPage(){
   const mv=$("mView"), inner=mv.querySelector(".q-page-inner15");
   if(!inner) return;
   const fs = fitPageBase(mv, inner);
-  if(mv.querySelector(".q-page15.centered")) return;
-  requestAnimationFrame(()=>{
-    /* الأسطر القصيرة (أواخر السور) تتوسط كالمصحف بدل التمدد */
-    const cands = [...inner.querySelectorAll(".q-line")].filter(l=>!l.classList.contains("qcen"));
-    cands.forEach(l=>{ l.classList.remove("qshort"); l.classList.add("qmeasure"); });
-    void inner.offsetWidth;
-    cands.forEach(l=>{
-      const kids=[...l.children];
-      const nat = kids.reduce((a,k)=>a+k.getBoundingClientRect().width,0);
-      l.classList.remove("qmeasure");
-      if(kids.length && nat < l.clientWidth*0.82) l.classList.add("qshort");
-    });
-    /* ضمانة: لا تجاوز عرضي أبداً */
-    let over = 1;
-    inner.querySelectorAll(".q-line").forEach(l=>{
-      if(l.scrollWidth > l.clientWidth+1) over = Math.max(over, l.scrollWidth/l.clientWidth);
-    });
-    if(over>1.003){
-      const cur = parseFloat(inner.style.getPropertyValue("--qfs"))||fs;
-      inner.style.setProperty("--qfs", (cur/over*0.99).toFixed(2)+"px");
-    }
-  });
+  applyLineFit(mv, inner, fs);
 }
 /* --- بناء صفحة مطابقة للمصحف المطبوع: ١٥ سطراً بالتقسيم الرسمي --- */
 let lastPageN = 0;
@@ -2792,13 +2804,12 @@ async function renderPageAuthentic(p){
   }
   if(M.prefs.page!==p) return;
   fitPage();
-  /* بعد استقرار القياس الدقيق، حدّث الذاكرة المؤقتة بمقاس الخط النهائي
-     ليصبح التنقل لهذه الصفحة لاحقاً (بالسحب أو غيره) فورياً بلا إعادة قياس */
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    if(M.prefs.page!==p) return;
-    const inner=mv.querySelector(".q-page-inner15");
-    if(inner) pageFastCache[p] = {html:h, qfs: inner.style.getPropertyValue("--qfs")};
-  }));
+  /* القياس أصبح متزامناً الآن، فنحدّث الذاكرة المؤقتة فوراً بالنسخة النهائية
+     المصححة فعلياً من DOM (متضمّنة تصنيفات الأسطر القصيرة ومقاس الخط بعد
+     ضمانة عدم التجاوز) — بحيث تكون أي معاينة لاحقة لهذه الصفحة (بالسحب أو
+     غيره) صحيحة تماماً من أول لحظة عرض، بلا أي تصحيح متأخر تراه العين */
+  const inner = mv.querySelector(".q-page-inner15");
+  if(inner) pageFastCache[p] = {html: mv.innerHTML, qfs: inner.style.getPropertyValue("--qfs")};
 }
 /* عرض سريع أثناء سحب شريط التنقل — من الذاكرة المؤقتة إن وُجدت (فوري تماماً)،
    وإلا ببناء أخفّ بلا أي قياس/Reflow حتى لا يثقل التمرير */
@@ -3325,7 +3336,14 @@ async function pgDragEnsure(p, container, token){
     if(!pgDrag || pgDrag.token!==token) return; /* تجاوزه السحب أو انتهى قبل اكتمال البناء */
     container.innerHTML = h;
     const inner = container.querySelector(".q-page-inner15");
-    if(inner){ const fs = fitPageBase(container, inner); pageFastCache[p] = {html:h, qfs: fs!=null? fs.toFixed(2)+"px": null}; }
+    if(inner){
+      /* سحب الصفحة باللمس لا يعبر إلا صفحة واحدة جديدة كحد أقصى في كل حركة
+         (خلافاً لشريط التمرير السريع)، فتحمّل القياس الكامل هنا زهيد تماماً
+         — ويضمن ألا يظهر أي تصحيح متأخر حتى في أول ظهور لهذه الصفحة إطلاقاً */
+      const fs = fitPageBase(container, inner);
+      applyLineFit(container, inner, fs);
+      pageFastCache[p] = {html: container.innerHTML, qfs: inner.style.getPropertyValue("--qfs") || (fs!=null? fs.toFixed(2)+"px": null)};
+    }
   }catch(e){}
 }
 const mDragLayer = $("mDragLayer");
