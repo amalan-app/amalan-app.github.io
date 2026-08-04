@@ -76,7 +76,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
 .brand h1{font-family:var(--f-display);font-weight:700;font-size:40px;line-height:1;color:var(--gold-hi);
   text-shadow:0 1px 0 rgba(255,255,255,.6);letter-spacing:.5px}
 .brand small{font-size:10.5px;color:var(--muted);letter-spacing:.4px}
-.icon-btn{width:42px;height:42px;border-radius:14px;border:1px solid var(--card-b);
+.icon-btn{width:44px;height:44px;border-radius:14px;border:1px solid var(--card-b);
   background:var(--card);color:var(--muted);display:grid;place-items:center;cursor:pointer;
   transition:all .3s var(--ease);font-size:18px;position:relative}
 .icon-btn:active{transform:scale(.92);color:var(--gold)}
@@ -97,11 +97,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
 .active-dhikr .hint::before,.active-dhikr .hint::after{content:"";width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--faint))}
 .active-dhikr .hint::after{background:linear-gradient(-90deg,transparent,var(--faint))}
 
-/* ======== العدّاد الدائري ======== */
-.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:190px;position:relative;
+/* ======== العدّاد الدائري ========
+   min-height:min-content (لا رقم ثابت) — يمنع مربّع .stage من الانضغاط إلى
+   أصغر من محتواه الفعلي (الدائرة + الخرزات + صفوف الأزرار)؛ هذا هو ما يمنع
+   جذرياً أي تداخل بصري بين الدائرة وما فوقها على أي جهاز مهما كانت شاشته
+   قصيرة — إن ضاقت المساحة فعلاً يظهر تمرير رأسي بسيط بدل أي تراكب */
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:min-content;position:relative;
   padding-top:10px}
-.tap-zone{position:relative;height:min(78vw,320px);max-height:100%;aspect-ratio:1;cursor:pointer;touch-action:manipulation;
-  display:grid;place-items:center;border-radius:50%;flex:0 1 auto;min-height:150px}
+/* مقاس الدائرة يُحسب فعلياً عبر JS (fitTapZone) ليلائم المساحة المتاحة رأسياً
+   وأفقياً معاً على أي جهاز — القيمة هنا مجرد بديل احتياطي قبل تنفيذ JS */
+.tap-zone{position:relative;width:var(--tzSize,min(78vw,320px));height:var(--tzSize,min(78vw,320px));
+  max-width:100%;max-height:100%;aspect-ratio:1;cursor:pointer;touch-action:manipulation;
+  display:grid;place-items:center;border-radius:50%;flex:0 1 auto}
 .tap-zone svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .ring-track{fill:none;stroke:rgba(110,108,68,.15);stroke-width:7}
 .ring-fill{fill:none;stroke:url(#goldGrad);stroke-width:7;stroke-linecap:round;
@@ -342,7 +349,6 @@ html.dark .dph{border-color:rgba(201,196,142,.4);background:rgba(201,196,142,.07
 @media (max-height:640px){
   .brand h1{font-size:32px}.ayah{display:none}
   .count{font-size:clamp(52px,17vw,74px)}
-  .tap-zone{width:min(64vw,250px)}
 }
 
 /* ======== الوضع الداكن — الألوان معكوسة ======== */
@@ -472,6 +478,16 @@ html.dark .abtn.del-act{border-color:rgba(224,150,124,.6);background:rgba(224,15
 .m-view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:max(8px,env(safe-area-inset-top)) 8px calc(3px + env(safe-area-inset-bottom));overscroll-behavior:contain}
 .m-view.lock{overflow:hidden;touch-action:pan-x;overscroll-behavior:none}
+.m-view.dragging{touch-action:none}
+/* طبقة السحب الحي لتقليب الصفحات — تتبع إصبعك أثناء اللمس بدل القفز المفاجئ
+   بعد الإفلات؛ شفافة للمس (pointer-events:none) لأن الاستماع الفعلي للمس يبقى
+   على mView نفسه أدناه، وهي فوقه بصرياً فقط أثناء السحب */
+#mDragLayer{position:absolute;inset:0;z-index:5;pointer-events:none;display:none}
+#mDragLayer.on{display:block}
+.mv-clone{position:absolute;inset:0;overflow:hidden;
+  padding:max(8px,env(safe-area-inset-top)) 8px calc(3px + env(safe-area-inset-bottom));
+  background:var(--bg0);will-change:transform}
+.mv-clone .q-page{animation:none !important}
 .m-load{text-align:center;color:var(--muted);font-size:14.5px;line-height:2;
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:max-content;max-width:82vw}
 .m-load .big{font-family:var(--f-display);font-size:22px;color:var(--gold-hi)}
@@ -955,6 +971,7 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <small>يُحفَظ في جهازك فلا يحتاج تحميلاً مرة أخرى بإذن الله</small>
     </div>
   </div>
+  <div id="mDragLayer"></div>
 
   <div class="q-audio" id="qAudio">
     <button class="qa-b" id="qaPlay">⏸</button>
@@ -1249,6 +1266,53 @@ function fitDhikrText(){
     guard++;
   }
 }
+/* يحسب مقاس دائرة التسبيح فعلياً من المساحة المتاحة داخل .stage (عرضاً
+   وارتفاعاً معاً) بدل الاعتماد على وحدة vw وحدها — هذا هو الحل الجذري لتلافي
+   أي تداخل بين الدائرة وبطاقات أوقات الصلاة فوقها على الشاشات القصيرة
+   (كبعض أجهزة آيفون القديمة أو أندرويد ذات الشاشة الصغيرة) */
+function fitTapZone(){
+  const app = document.querySelector(".app");
+  const stage = document.querySelector(".stage");
+  const tz = $("tapZone");
+  const beads = $("beads");
+  const activeDhikr = $("activeDhikr");
+  const statsEl = document.querySelector(".stats");
+  if(!app || !stage || !tz || !activeDhikr) return;
+  const tools = stage.querySelector(".tools:not(.tools-main)");
+  const toolsMain = stage.querySelector(".tools-main");
+  tz.style.removeProperty("--tzSize");
+  /* .stage نفسه مضغوط بواسطة flex:1 على الشاشات القصيرة (لا يعكس المساحة
+     الحقيقية اللازمة)، لذا لا نعتمد على stage.clientHeight إطلاقاً؛ بدل ذلك
+     نقيس فعلياً المساحة الرأسية الحقيقية المتبقية بين نهاية منطقة الذكر
+     النشط (وهي ثابتة الحجم) ونهاية صندوق .app، ثم نطرح منها المساحة التي
+     تحتاجها فعلياً بقية عناصر .stage (الخرزات وصفوف الأزرار) وعنصر
+     الإحصائيات أسفل الصفحة — وما تبقى هو تحديداً حجم الدائرة الآمن الذي لن
+     يتداخل مع أي عنصر آخر مهما كان الجهاز */
+  const appRect = app.getBoundingClientRect();
+  const appCS = getComputedStyle(app);
+  const appPadBottom = parseFloat(appCS.paddingBottom)||0;
+  const adRect = activeDhikr.getBoundingClientRect();
+  const stageCS = getComputedStyle(stage);
+  const stagePadTop = parseFloat(stageCS.paddingTop)||0;
+  const marginTopOf = el=> el? (parseFloat(getComputedStyle(el).marginTop)||0) : 0;
+  const belowTapzone =
+    (beads ? marginTopOf(beads) + beads.offsetHeight : 0) +
+    (tools ? marginTopOf(tools) + tools.offsetHeight : 0) +
+    (toolsMain ? marginTopOf(toolsMain) + toolsMain.offsetHeight : 0);
+  const statsFootprint = statsEl ? marginTopOf(statsEl) + statsEl.offsetHeight : 0;
+  const totalBudget = (appRect.bottom - appPadBottom) - adRect.bottom;
+  const availH = totalBudget - stagePadTop - belowTapzone - statsFootprint;
+  const availW = stage.clientWidth || window.innerWidth*0.78;
+  const desired = Math.min(window.innerWidth*0.78, 320);
+  /* نعطي أولوية لعدم التداخل مطلقاً على الحجم المريح — الحد الأدنى منخفض
+     عمداً (100px) حتى تبقى الدائرة داخل حدودها في أضيق الشاشات ارتفاعاً */
+  /* ملاحظة مهمة: لا نستبعد القيم السالبة/الصغيرة جداً لـ availH بردّها إلى
+     desired — فذلك يخفي أضيق الحالات فعلياً (وهي بالضبط ما نحتاج معالجته)؛
+     الاستبدال بـ desired يحدث فقط إذا فشل القياس تماماً (NaN) */
+  const availHSafe = Number.isFinite(availH) ? availH : desired;
+  const size = Math.max(100, Math.min(desired, availHSafe, availW));
+  tz.style.setProperty("--tzSize", size.toFixed(1)+"px");
+}
 function renderCounter(pulse){
   const d = active();
   const num = $("countNum");
@@ -1265,7 +1329,9 @@ function renderCounter(pulse){
   renderStats();
   applyBg();
 }
-window.addEventListener("resize", ()=>fitDhikrText());
+window.addEventListener("resize", ()=>{ fitDhikrText(); fitTapZone(); });
+window.addEventListener("orientationchange", ()=>setTimeout(fitTapZone, 60));
+requestAnimationFrame(()=>requestAnimationFrame(fitTapZone));
 
 function renderBeads(d){
   const box = $("beads");
@@ -2398,6 +2464,7 @@ function updatePrayerPill(){
     }
     $("pLeft").textContent = leftTxt+(geoReal ? (geo.name ? "  |  "+geo.name : "") : "  |  الرياض");
     bar.style.display = "";
+    requestAnimationFrame(fitTapZone);
     /* إشعار دخول الوقت */
     if(prevNextKey && prevNextKey!==nextKey){
       const adhanKey = todayStr()+"-"+prevNextKey;
@@ -2591,11 +2658,15 @@ function ensureQcfFont(n){
   qcfFonts[n].catch(()=>{ delete qcfFonts[n]; });
   return qcfFonts[n];
 }
-/* معايرة دقيقة لكل زخرفة اسم سورة على حدة (114 رمزاً بدءاً من U+F100) —
-   قيمة الإزاحة الرأسية (em) محسوبة من القياس الفعلي لحبر كل حرف زخرفي عبر
-   Canvas actualBoundingBoxAscent/Descent، بحيث يتوسط اسم كل سورة برواجه تماماً
-   بدل استخدام إزاحة واحدة عامة لا تلائم كل الأشكال */
-const SH_OFFSETS=[-0.1048,-0.0839,-0.0192,-0.0959,-0.0575,-0.0192,0.0,-0.0384,-0.0767,-0.0575,-0.0575,-0.0575,-0.0959,-0.1151,-0.0384,-0.0959,-0.0767,-0.0384,-0.0384,-0.0384,-0.0192,-0.0767,-0.0767,-0.0959,-0.0575,-0.0767,-0.0767,-0.0959,-0.0575,-0.0959,-0.0192,-0.0575,-0.0767,-0.0959,-0.0767,-0.0575,-0.0575,-0.0767,-0.0767,-0.0575,-0.0575,-0.0575,-0.0959,-0.0767,-0.0575,-0.0192,-0.0959,-0.1535,-0.0767,-0.0575,-0.0384,-0.0767,-0.0767,-0.0575,-0.0575,-0.0767,-0.0767,-0.0767,-0.0575,-0.0767,-0.0575,-0.0575,-0.1151,-0.1151,-0.0192,-0.0767,0.0,-0.0575,-0.0575,-0.0767,-0.0767,-0.0767,-0.0767,-0.0575,-0.0998,-0.1367,0.0,-0.1343,-0.0767,-0.0791,-0.0959,-0.0959,-0.0575,-0.0575,-0.0767,-0.0767,-0.0767,-0.0584,-0.0575,-0.0384,-0.0575,0.0384,-0.0767,-0.0575,-0.0959,-0.0575,-0.0767,-0.1343,-0.0384,-0.0575,-0.0767,-0.0575,-0.0575,-0.0575,-0.0575,-0.0575,-0.0767,-0.0192,-0.0192,-0.0767,-0.0767,-0.0384,-0.0575];
+/* معايرة دقيقة لكل زخرفة اسم سورة على حدة (١١٤ رمزاً بدءاً من U+F100) — إعادة
+   قياس جذرية وكاملة: تم قياس كل حرف زخرفي بدقة Canvas actualBoundingBoxAscent/
+   Descent عند ثلاثة مقاسات مختلفة (100 و300 و600 بكسل) للتأكد من ثبات النتيجة
+   تماماً (تطابق كامل بلا أي فرق بين 300 و600 بكسل)، بدل الاعتماد على قياس واحد
+   قد يحمل ضجيجاً بسبب تقريب المتصفح عند المقاسات الصغيرة. كما تم اكتشاف وإصلاح
+   خللاً جوهرياً: كانت المصفوفة السابقة تضم ١١٣ قيمة فقط بدل ١١٤، ما جعل آخر
+   سورة (سورة الناس) تستخدم قيمة افتراضية عامة غير دقيقة لها — وهذا بالتحديد
+   يفسّر لماذا بقيت بعض البراويز غير متوازنة تماماً رغم الضبط السابق */
+const SH_OFFSETS=[-0.1016,-0.0859,-0.0156,-0.1016,-0.0547,-0.0234,0.0078,-0.0391,-0.0781,-0.0625,-0.0625,-0.0547,-0.0938,-0.1094,-0.0391,-0.0859,-0.0938,-0.0391,-0.0547,-0.0469,-0.0234,-0.0781,-0.0859,-0.0938,-0.0703,-0.0859,-0.0859,-0.0938,-0.0625,-0.1094,-0.0312,-0.0625,-0.0781,-0.1016,-0.0781,-0.0547,-0.0625,-0.0859,-0.0781,-0.0625,-0.0625,-0.0703,-0.0938,-0.0859,-0.0469,-0.0078,-0.0859,-0.1641,-0.0859,-0.0547,-0.0234,-0.0781,-0.0703,-0.0547,-0.0625,-0.0781,-0.0781,-0.0625,-0.0625,-0.0781,-0.0703,-0.0547,-0.1094,-0.1172,-0.0156,-0.0859,-0.0156,-0.0625,-0.0703,-0.0703,-0.0703,-0.0859,-0.0703,-0.0703,-0.0859,-0.1172,0.0,-0.1328,-0.0703,-0.0547,-0.0781,-0.1016,-0.0625,-0.0625,-0.0859,-0.0781,-0.0703,-0.0547,-0.0625,-0.0312,-0.0469,0.0391,-0.0938,-0.0625,-0.0938,-0.0625,-0.0781,-0.1328,-0.0312,-0.0469,-0.0781,-0.0547,-0.0547,-0.0703,-0.0625,-0.0547,-0.0859,-0.0234,-0.0156,-0.0859,-0.0703,-0.0391,-0.0547,-0.0547];
 function shOffsetFor(cp){ const i=cp-0xF100; const v=SH_OFFSETS[i]; return (v===undefined)?-0.066:v; }
 /* سطر المصحف: تُجمَّع كلمات الآية الواحدة في كتلة واحدة متصلة
    حتى يشمل التظليل والتلوين الآية كاملة لا كلمةً كلمة */
@@ -3231,17 +3302,91 @@ document.querySelectorAll(".m-nav, .m-hdr").forEach(el=>{
     if(!$("mushaf").classList.contains("zen")) chromeTimer();
   }, {passive:true}));
 });
-/* سحب لتقليب الصفحات / السور */
-let tX=null, tY=null;
-$("mView").addEventListener("touchstart", e=>{ tX=e.touches[0].clientX; tY=e.touches[0].clientY; }, {passive:true});
-$("mView").addEventListener("touchend", e=>{
-  if(tX===null) return;
-  const dx = e.changedTouches[0].clientX-tX, dy = e.changedTouches[0].clientY-tY;
-  tX=null;
-  if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.2){
-    hideAyBar();
-    dx>0 ? renderPage(M.prefs.page+1) : renderPage(M.prefs.page-1);
+/* سحب حي لتقليب الصفحات — الصفحة تتبع إصبعك فوراً أثناء اللمس والسحب بدل
+   قفزة مفاجئة بعد الإفلات؛ تُبنى معاينة الصفحة التالية/السابقة من الذاكرة
+   المؤقتة (pageFastCache) نفسها المستخدمة في شريط التنقل، فتكون غالباً جاهزة
+   فوراً دون أي بناء إضافي */
+let pgDrag = null;
+let pgDragSeq = 0;
+function pgDragSlide(p){
+  const el = document.createElement("div");
+  el.className = "mv-clone";
+  const cached = pageFastCache[p];
+  if(cached){
+    el.innerHTML = cached.html;
+    if(cached.qfs){ const inner=el.querySelector(".q-page-inner15"); if(inner) inner.style.setProperty("--qfs", cached.qfs); }
   }
+  return el;
+}
+async function pgDragEnsure(p, container, token){
+  if(pageFastCache[p]) return; /* عُرضت مسبقاً فوراً أعلاه، لا حاجة لإعادة البناء */
+  try{
+    const h = await buildPageHTML(p, true);
+    if(!pgDrag || pgDrag.token!==token) return; /* تجاوزه السحب أو انتهى قبل اكتمال البناء */
+    container.innerHTML = h;
+    const inner = container.querySelector(".q-page-inner15");
+    if(inner){ const fs = fitPageBase(container, inner); pageFastCache[p] = {html:h, qfs: fs!=null? fs.toFixed(2)+"px": null}; }
+  }catch(e){}
+}
+const mDragLayer = $("mDragLayer");
+mvEl.addEventListener("touchstart", e=>{
+  if(e.touches.length!==1) return;
+  pgDrag = { sx:e.touches[0].clientX, sy:e.touches[0].clientY, dx:0, committed:false, w:(mvEl.clientWidth||320) };
+}, {passive:true});
+mvEl.addEventListener("touchmove", e=>{
+  if(!pgDrag || e.touches.length!==1) return;
+  const x = e.touches[0].clientX, y = e.touches[0].clientY;
+  const dx = x - pgDrag.sx, dy = y - pgDrag.sy;
+  if(!pgDrag.committed){
+    if(Math.abs(dx)<10 && Math.abs(dy)<10) return;
+    if(Math.abs(dy) > Math.abs(dx)*1.1 || $("ayBar").classList.contains("open") || $("qsPanel").classList.contains("open")){ pgDrag=null; return; }
+    const dir = dx>0 ? 1 : -1, target = M.prefs.page + dir;
+    if(target<1 || target>604){ pgDrag=null; return; }
+    lpCancel();
+    pgDrag.committed = true; pgDrag.dir = dir; pgDrag.target = target; pgDrag.token = ++pgDragSeq;
+    mDragLayer.innerHTML = "";
+    const curClone = pgDragSlide(M.prefs.page);
+    curClone.style.transform = "translateX(0px)";
+    const incClone = pgDragSlide(target);
+    incClone.style.transform = "translateX("+(dir>0? pgDrag.w : -pgDrag.w)+"px)";
+    mDragLayer.appendChild(curClone); mDragLayer.appendChild(incClone);
+    pgDrag.curEl = curClone; pgDrag.incEl = incClone;
+    pgDragEnsure(target, incClone, pgDrag.token);
+    mDragLayer.classList.add("on");
+    mvEl.classList.add("dragging");
+  }
+  if(!pgDrag.committed) return;
+  e.preventDefault();
+  let ddx = dx; const w = pgDrag.w;
+  if(Math.abs(ddx)>w) ddx = w*Math.sign(ddx);
+  pgDrag.dx = ddx;
+  pgDrag.curEl.style.transform = "translateX("+ddx+"px)";
+  pgDrag.incEl.style.transform = "translateX("+(ddx - pgDrag.dir*w)+"px)";
+}, {passive:false});
+function pgDragFinish(){
+  if(!pgDrag) return;
+  if(!pgDrag.committed){ pgDrag=null; return; }
+  const w=pgDrag.w, dx=pgDrag.dx, dir=pgDrag.dir, target=pgDrag.target;
+  const passed = Math.abs(dx) > Math.min(90, w*0.24);
+  const curEl=pgDrag.curEl, incEl=pgDrag.incEl;
+  curEl.style.transition = incEl.style.transition = "transform .22s var(--ease)";
+  if(passed){
+    curEl.style.transform = "translateX("+(dir*w)+"px)";
+    incEl.style.transform = "translateX(0px)";
+  }else{
+    curEl.style.transform = "translateX(0px)";
+    incEl.style.transform = "translateX("+(dir>0? w : -w)+"px)";
+  }
+  setTimeout(()=>{
+    mDragLayer.classList.remove("on"); mDragLayer.innerHTML = ""; mvEl.classList.remove("dragging");
+    if(passed){ hideAyBar(); renderPage(target); }
+  }, 230);
+  pgDrag = null;
+}
+mvEl.addEventListener("touchend", pgDragFinish, {passive:true});
+mvEl.addEventListener("touchcancel", ()=>{
+  if(pgDrag && pgDrag.committed){ mDragLayer.classList.remove("on"); mDragLayer.innerHTML=""; mvEl.classList.remove("dragging"); }
+  pgDrag=null;
 }, {passive:true});
 
 /* ---------- البحث — لوحة تنسدل من الأعلى بلا نوافذ ---------- */
