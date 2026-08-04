@@ -620,11 +620,11 @@ html.dark .q-page15.centered .q-page-inner15{border-color:rgba(201,196,142,.55);
 .q-run .qend,.q-lprun .qend{color:var(--gold-hi)}
 .q-sh{font-family:'QCF4_QBSML';font-size:1.34em;color:var(--gold-hi);line-height:1.3}
 /* برواز اسم السورة — كزخرفة مصحف المدينة */
-.q-line.q-shline{position:relative;margin:.1em .05em;padding:.1em 1.4em;border-radius:9px;align-items:center !important;
+.q-line.q-shline{position:relative;margin:.1em .05em;padding:0 1.4em;border-radius:9px;align-items:center !important;justify-content:center !important;min-height:1.8em;
   border:1.5px solid rgba(110,108,68,.55);
   background:linear-gradient(180deg, rgba(110,108,68,.12), rgba(110,108,68,.045) 55%, rgba(110,108,68,.10));
   box-shadow:inset 0 0 0 2.5px var(--bg0), inset 0 0 0 4px rgba(110,108,68,.4)}
-.q-line.q-shline .q-sh{font-size:1.18em;line-height:1;display:flex;align-items:center;transform:translateY(-.03em)}
+.q-line.q-shline .q-sh{font-size:1.18em;line-height:1;display:flex;align-items:center}
 .q-line.q-shline::before,.q-line.q-shline::after{content:"";position:absolute;top:50%;width:.55em;height:.55em;
   transform:translateY(-50%) rotate(45deg);border:1.5px solid rgba(110,108,68,.55);border-radius:2px;
   background:radial-gradient(circle at 35% 35%, var(--bg0) 30%, rgba(110,108,68,.30))}
@@ -1054,7 +1054,8 @@ const DEFAULT_ADHKAR = [
   {text:"أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْه", target:100},
   {text:"اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّد", target:100},
   {text:"لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِالله", target:100},
-  {text:"سُبْحَانَ اللهِ وَبِحَمْدِهِ سُبْحَانَ اللهِ العَظِيم", target:100}
+  {text:"سُبْحَانَ اللهِ وَبِحَمْدِهِ سُبْحَانَ اللهِ العَظِيم", target:100},
+  {text:"سُبْحَانَكَ اللَّهُمَّ رَبَّنَا وَبِحَمْدِكَ، اللَّهُمَّ اغْفِرْ لِي", target:100}
 ];
 
 function todayStr(){
@@ -1068,7 +1069,7 @@ function freshState(){
     v:1,
     firstUse: Date.now(),
     adhkar: DEFAULT_ADHKAR.map((d,i)=>({
-      id:uid()+i, text:d.text, target:d.target,
+      id:uid()+i, text:d.text, target:d.target, builtin:true,
       cycle:0, rounds:0, today:0, total:0,
       date:todayStr(), lastUsed:0, createdAt:Date.now()+i
     })),
@@ -1098,6 +1099,18 @@ async function loadState(){
       }
     }
   }catch(e){ /* لا توجد بيانات سابقة */ }
+  /* ترحيل: وسم الأذكار الأساسية وعدم السماح بحذفها، وإضافة الجديد منها */
+  try{
+    const norm = t=>t.replace(/[\u064B-\u065F\u0670]/g,"").replace(/\s+/g," ").trim();
+    const defs = DEFAULT_ADHKAR.map(d=>norm(d.text));
+    state.adhkar.forEach(d=>{ if(defs.includes(norm(d.text))) d.builtin = true; });
+    DEFAULT_ADHKAR.forEach((dd,i)=>{
+      if(!state.adhkar.some(d=>norm(d.text)===norm(dd.text))){
+        state.adhkar.push({id:uid()+"m"+i, text:dd.text, target:dd.target, builtin:true,
+          cycle:0, rounds:0, today:0, total:0, date:todayStr(), lastUsed:0, createdAt:Date.now()+i});
+      }
+    });
+  }catch(e){}
   if(!state.adhkar.find(d=>d.id===state.settings.activeId)){
     state.settings.activeId = state.adhkar[0].id;
   }
@@ -1265,11 +1278,12 @@ function renderList(){
       '</div>'+
       '<div class="acts">'+
         '<button class="abtn edit-act" aria-label="تعديل">✎ تعديل</button>'+
-        '<button class="abtn del-act del" aria-label="حذف">🗑 حذف</button>'+
+        (d.builtin ? '' : '<button class="abtn del-act del" aria-label="حذف">🗑 حذف</button>')+
       '</div>'+
       '<div class="mini-bar"><i style="width:'+pct+'%"></i></div>';
     card.addEventListener("click", e=>{
       if(e.target.closest(".del")){
+        if(d.builtin){ showToast("الأذكار الأساسية لا تُحذف — يمكن تعديلها فقط"); return; }
         if(state.adhkar.length<=1){ showToast("لا يمكن حذف آخر ذِكر"); return; }
         askConfirm("حذف الذِّكر", "هل أنت متأكد من حذف «"+d.text.slice(0,40)+"»؟ سيُحذف مع إحصائياته نهائياً.", ()=>{
           delete bgCache[d.id];
@@ -2010,7 +2024,8 @@ function openEdit(id){
   pendingBg = undefined;
   bgFieldUI(null);
   $("editTitle").textContent = id ? "تعديل الذِّكر" : "ذِكر جديد";
-  $("btnDelete").style.display = id ? "block" : "none";
+  const dEd = id ? state.adhkar.find(x=>x.id===id) : null;
+  $("btnDelete").style.display = (id && !(dEd&&dEd.builtin)) ? "block" : "none";
   if(id){
     const d = state.adhkar.find(x=>x.id===id);
     $("fText").value = d.text;
@@ -2460,6 +2475,12 @@ function ensureQcfFont(n){
   qcfFonts[n].catch(()=>{ delete qcfFonts[n]; });
   return qcfFonts[n];
 }
+/* معايرة دقيقة لكل زخرفة اسم سورة على حدة (114 رمزاً بدءاً من U+F100) —
+   قيمة الإزاحة الرأسية (em) محسوبة من القياس الفعلي لحبر كل حرف زخرفي عبر
+   Canvas actualBoundingBoxAscent/Descent، بحيث يتوسط اسم كل سورة برواجه تماماً
+   بدل استخدام إزاحة واحدة عامة لا تلائم كل الأشكال */
+const SH_OFFSETS=[-0.1048,-0.0839,-0.0192,-0.0959,-0.0575,-0.0192,0.0,-0.0384,-0.0767,-0.0575,-0.0575,-0.0575,-0.0959,-0.1151,-0.0384,-0.0959,-0.0767,-0.0384,-0.0384,-0.0384,-0.0192,-0.0767,-0.0767,-0.0959,-0.0575,-0.0767,-0.0767,-0.0959,-0.0575,-0.0959,-0.0192,-0.0575,-0.0767,-0.0959,-0.0767,-0.0575,-0.0575,-0.0767,-0.0767,-0.0575,-0.0575,-0.0575,-0.0959,-0.0767,-0.0575,-0.0192,-0.0959,-0.1535,-0.0767,-0.0575,-0.0384,-0.0767,-0.0767,-0.0575,-0.0575,-0.0767,-0.0767,-0.0767,-0.0575,-0.0767,-0.0575,-0.0575,-0.1151,-0.1151,-0.0192,-0.0767,0.0,-0.0575,-0.0575,-0.0767,-0.0767,-0.0767,-0.0767,-0.0575,-0.0998,-0.1367,0.0,-0.1343,-0.0767,-0.0791,-0.0959,-0.0959,-0.0575,-0.0575,-0.0767,-0.0767,-0.0767,-0.0584,-0.0575,-0.0384,-0.0575,0.0384,-0.0767,-0.0575,-0.0959,-0.0575,-0.0767,-0.1343,-0.0384,-0.0575,-0.0767,-0.0575,-0.0575,-0.0575,-0.0575,-0.0575,-0.0767,-0.0192,-0.0192,-0.0767,-0.0767,-0.0384,-0.0575];
+function shOffsetFor(cp){ const i=cp-0xF100; const v=SH_OFFSETS[i]; return (v===undefined)?-0.066:v; }
 /* سطر المصحف: تُجمَّع كلمات الآية الواحدة في كتلة واحدة متصلة
    حتى يشمل التظليل والتلوين الآية كاملة لا كلمةً كلمة */
 function lineRunsHTML(L, fam){
@@ -2478,7 +2499,7 @@ function lineRunsHTML(L, fam){
         '" data-k="'+k+'" style="flex-grow:'+sg.g.length+';font-family:\''+fam+'\'">'+inner+'</span>';
     }
     const g=sg.g[0], ch=String.fromCodePoint(g[0]);
-    if(sg.t==="s") return '<span class="q-sh">'+ch+'</span>';
+    if(sg.t==="s") return '<span class="q-sh" style="transform:translateY('+shOffsetFor(g[0])+'em)">'+ch+'</span>';
     if(sg.t==="b") return '<span class="q-bs" style="font-family:\''+fam+'\'">\uF8DD</span>';
     return '<span class="q-orn"'+(g[1]===1?'':' style="font-family:\''+fam+'\'"')+'>'+ch+'</span>';
   }).join('');
@@ -3104,7 +3125,7 @@ $("mSlider").addEventListener("input", ()=>{
   if(p!==lastTickP){ lastTickP=p; slTick(); if(QP) ensureQcfFont(QP[p-1].f).catch(()=>{}); }
   /* عرض حي للصفحة أثناء السحب — يجعل الوصول فورياً */
   clearTimeout(slLive);
-  slLive = setTimeout(()=>{ if(QP && M.quran) renderPage(p); }, 150);
+  slLive = setTimeout(()=>{ if(QP && M.quran) renderPage(p); }, 90);
   $("mTip").textContent = surahForPage(p).name+" · صفحة "+fmt(p);
   $("mTip").classList.add("on");
   clearTimeout(tipT); tipT = setTimeout(()=>$("mTip").classList.remove("on"), 1400);
