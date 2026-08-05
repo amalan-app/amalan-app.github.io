@@ -258,6 +258,39 @@ html.dark .dph{border-color:rgba(201,196,142,.4);background:rgba(201,196,142,.07
 .sw.on{background:rgba(110,108,68,.55)}
 .sw.on::after{inset-inline-start:23px;background:var(--gold-hi)}
 
+/* ======== ضبط الموقع الجغرافي (الإعدادات) ======== */
+.loc-block{padding:12px 2px 4px;border-bottom:1px solid rgba(110,108,68,.10)}
+.loc-block>.lbl{margin-bottom:11px}
+.loc-block>.lbl span{font-size:14px;color:var(--ink)}
+.loc-block>.lbl small{display:block;font-size:11px;color:var(--faint);margin-top:2px}
+.loc-status{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--card-b);
+  border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.loc-status .ic{font-size:18px;flex:0 0 auto}
+.loc-status .tx{flex:1;min-width:0}
+.loc-status .city{font-family:var(--f-display);font-size:15px;color:var(--ink);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.loc-status .meth{font-size:10.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loc-refresh{width:32px;height:32px;border-radius:10px;border:none;background:var(--card-b);
+  color:var(--gold);font-size:14px;cursor:pointer;flex:0 0 auto;display:grid;place-items:center;transition:transform .2s}
+.loc-refresh:active{transform:scale(.9)}
+.loc-refresh.spin{animation:locspin .9s linear infinite}
+@keyframes locspin{to{transform:rotate(360deg)}}
+.loc-modes{display:flex;gap:8px;margin-bottom:9px}
+.loc-mode{flex:1;min-height:38px;padding:6px 4px;border-radius:12px;border:1px solid var(--card-b);background:var(--card);
+  color:var(--muted);font-size:12px;line-height:1.35;font-family:var(--f-ui);cursor:pointer;transition:all .25s var(--ease)}
+.loc-mode.on{background:var(--gold-dim);border-color:rgba(110,108,68,.5);color:var(--gold-hi);font-weight:600}
+.loc-manual{overflow:hidden;max-height:0;transition:max-height .35s var(--ease)}
+.loc-manual.open{max-height:280px}
+.loc-manual input{width:100%;background:rgba(110,108,68,.08);border:1px solid var(--card-b);border-radius:12px;
+  color:var(--ink);font-family:var(--f-ui);font-size:13.5px;padding:10px 12px;outline:none;margin-bottom:8px;
+  transition:border-color .3s}
+.loc-manual input:focus{border-color:rgba(110,108,68,.5)}
+.loc-results{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto;margin-bottom:6px}
+.loc-result{padding:9px 11px;border-radius:10px;background:var(--card);border:1px solid transparent;
+  font-size:12px;color:var(--ink);cursor:pointer;transition:background .2s;line-height:1.5}
+.loc-result:active{background:var(--gold-dim)}
+.loc-note{font-size:11px;color:var(--faint);text-align:center;padding:8px 4px;line-height:1.6}
+
 /* ======== توست ======== */
 .toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,calc(-100% - 140px));
   opacity:0;pointer-events:none;
@@ -852,9 +885,29 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <div><span>الانتقال التلقائي</span><small>عند إتمام الدورة ينتقل للذكر التالي</small></div>
       <div class="sw" id="swAuto"></div>
     </div>
-    <div class="switch-row" style="border:none">
+    <div class="switch-row">
       <div><span>الأرقام الهندية (٠١٢٣)</span><small>أو أرقام لاتينية (0123)</small></div>
       <div class="sw" id="swArabicNums"></div>
+    </div>
+    <div class="loc-block">
+      <div class="lbl"><span>الموقع الجغرافي</span><small>لحساب مواقيت الصلاة والأذان بدقة لمكانك</small></div>
+      <div class="loc-status">
+        <div class="ic">📍</div>
+        <div class="tx">
+          <div class="city" id="locCityTxt">جارٍ تحديد موقعك…</div>
+          <div class="meth" id="locMethTxt"></div>
+        </div>
+        <button class="loc-refresh" id="locRefreshBtn" aria-label="تحديث الموقع" type="button">⟳</button>
+      </div>
+      <div class="loc-modes">
+        <button class="loc-mode" id="locModeAuto" data-mode="auto" type="button">📡 تلقائي (موقع الجهاز)</button>
+        <button class="loc-mode" id="locModeManual" data-mode="manual" type="button">✏️ تحديد يدوي</button>
+      </div>
+      <div class="loc-manual" id="locManualBox">
+        <input type="text" id="locSearchInput" placeholder="اكتب اسم مدينتك… مثل: جدة" inputmode="search" autocomplete="off">
+        <div class="loc-results" id="locResults"></div>
+        <div class="loc-note" id="locNote" style="display:none"></div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn ghost" id="btnShareApp">📤 مشاركة التطبيق وتثبيته</button>
@@ -2363,66 +2416,168 @@ function prayerTimes(lat, lng, date, tzHours){
 }
 const PRAYER_NAMES = {fajr:"الفجر", ishraq:"الإشراق", dhuhr:"الظهر", asr:"العصر", maghrib:"المغرب", isha:"العشاء"};
 const DISPLAY_ORDER = ["fajr","ishraq","dhuhr","asr","maghrib","isha"];
-let geo = {lat:24.7136, lng:46.6753}; /* الافتراضي: الرياض حتى يُحدَّد الموقع */
+let geo = {lat:24.7136, lng:46.6753, mode:"auto", method:null}; /* الافتراضي: الرياض حتى يُحدَّد الموقع */
 let geoReal = false, lastAdhanKey = "";
+function saveGeo(){ try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){} }
 function geoName(cb){
-  /* اسم المنطقة بالعربية من الإحداثيات */
+  /* اسم المنطقة بالعربية من الإحداثيات (يُستخدم مع التحديد التلقائي فقط،
+     أما التحديد اليدوي فيأخذ الاسم مباشرة من نتيجة البحث) */
   fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+geo.lat+
         "&longitude="+geo.lng+"&localityLanguage=ar")
     .then(r=>r.json())
     .then(d=>{
       const n = d.city || d.locality || d.principalSubdivision || "";
-      if(n){ geo.name = n;
-        try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
-        updatePrayerPill();
-        if(cb) cb(n);
-      }
+      if(n){ geo.name = n; saveGeo(); updatePrayerPill(); renderLocUI(); if(cb) cb(n); }
     }).catch(()=>{});
 }
-function applyGeo(lat, lng){
+function applyGeo(lat, lng, opts){
+  opts = opts || {};
   const moved = Math.abs(geo.lat-lat)>0.12 || Math.abs(geo.lng-lng)>0.12;
   geo.lat = lat; geo.lng = lng; geoReal = true;
-  try{ localStorage.setItem("amalan:geo", JSON.stringify(geo)); }catch(e){}
+  if(opts.method) geo.method = opts.method;
+  if(opts.name) geo.name = opts.name;
+  saveGeo();
   updatePrayerPill();
+  renderLocUI();
+  if(opts.name){
+    if(moved && opts.notify!==false) showToast("تم تحديث موقعك: "+opts.name+" 🕌");
+    return;
+  }
   if(!geo.name || moved){
     const old = geo.name;
-    geoName(n=>{ if(moved && n && n!==old) showToast("تم تحديث موقعك: "+n+" 🕌"); });
+    geoName(n=>{ if(moved && n && n!==old && opts.notify!==false) showToast("تم تحديث موقعك: "+n+" 🕌"); });
   }
 }
 function sysLocate(){
-  /* موقع النظام — مرتبط بإعدادات الجهاز ويتغير تلقائياً مع التنقل */
+  /* موقع النظام — مرتبط بإعدادات الجهاز عبر واجهة الموقع القياسية بالمتصفح
+     (وعلى iOS تعمل داخل تطبيق كابسيتور بفضل إذن NSLocationWhenInUseUsageDescription) */
   return new Promise(res=>{
-    if(!navigator.geolocation) return res(false);
+    if(!navigator.geolocation) return res({ok:false});
     navigator.geolocation.getCurrentPosition(
-      p=>{ applyGeo(p.coords.latitude, p.coords.longitude); res(true); },
-      ()=>res(false),
+      p=>{ applyGeo(p.coords.latitude, p.coords.longitude, {method:"device"}); res({ok:true}); },
+      err=>res({ok:false, code: err && err.code}),
       {enableHighAccuracy:false, timeout:9000, maximumAge:120000});
   });
 }
 function ipLocate(){
-  fetch("https://ipwho.is/").then(r=>r.json()).then(d=>{
+  return fetch("https://ipwho.is/").then(r=>r.json()).then(d=>{
     if(!d || d.success===false || !d.latitude) throw 0;
-    applyGeo(d.latitude, d.longitude);
+    applyGeo(d.latitude, d.longitude, {method:"ip"});
   }).catch(()=>{
-    fetch("https://ipapi.co/json/").then(r=>r.json()).then(d=>{
-      if(d && d.latitude) applyGeo(d.latitude, d.longitude);
+    return fetch("https://ipapi.co/json/").then(r=>r.json()).then(d=>{
+      if(d && d.latitude) applyGeo(d.latitude, d.longitude, {method:"ip"});
       else updatePrayerPill();
     }).catch(()=>{ updatePrayerPill(); });
   });
 }
+async function autoLocate(){
+  /* وضع "تلقائي": نحاول موقع الجهاز أولاً، فإن رُفض الإذن أو تعذّر نستخدم
+     تقدير الموقع عبر عنوان الإنترنت كحل احتياطي بلا إزعاج المستخدم */
+  const r = await sysLocate();
+  if(!r.ok){
+    if(r.code===1) showLocNote("تم رفض إذن الموقع من الجهاز — يمكنك تفعيله من إعدادات النظام، أو تحديد موقعك يدوياً بالأسفل");
+    else showLocNote("");
+    await ipLocate();
+  }else{
+    showLocNote("");
+  }
+  return r.ok;
+}
 async function initGeo(){
   try{
     const c = localStorage.getItem("amalan:geo");
-    if(c){ geo = JSON.parse(c); geoReal = true; }
+    if(c){ geo = Object.assign(geo, JSON.parse(c)); geoReal = true; }
   }catch(e){}
   updatePrayerPill();
-  const ok = await sysLocate();
-  if(!ok) ipLocate();
+  renderLocUI();
+  if(geo.mode==="manual") return; /* المستخدم حدّد موقعه يدوياً، فلا نُبدّله تلقائياً */
+  await autoLocate();
 }
-/* عند العودة للتطبيق: إعادة قراءة الموقع تلقائياً (سفر أو تنقل) */
+/* عند العودة للتطبيق: إعادة قراءة الموقع تلقائياً (سفر أو تنقل) — إلا إن كان الوضع يدوياً */
 document.addEventListener("visibilitychange", ()=>{
-  if(!document.hidden) sysLocate().then(ok=>{ if(!ok) ipLocate(); });
+  if(!document.hidden && geo.mode!=="manual") autoLocate();
 });
+
+/* ================= واجهة ضبط الموقع في الإعدادات ================= */
+function methodLabel(){
+  if(geo.mode==="manual") return "تحديد يدوي";
+  if(geo.method==="device") return "موقع الجهاز (GPS)";
+  if(geo.method==="ip") return "تقدير تقريبي عبر الإنترنت";
+  return "—";
+}
+function renderLocUI(){
+  const cityTxt = $("locCityTxt");
+  if(!cityTxt) return;
+  cityTxt.textContent = geo.name ? geo.name : (geoReal ? "موقعك الحالي" : "جارٍ تحديد موقعك…");
+  $("locMethTxt").textContent = methodLabel() + (geoReal ? "  ·  "+geo.lat.toFixed(2)+", "+geo.lng.toFixed(2) : "");
+  $("locModeAuto").classList.toggle("on", geo.mode!=="manual");
+  $("locModeManual").classList.toggle("on", geo.mode==="manual");
+  $("locManualBox").classList.toggle("open", geo.mode==="manual");
+}
+function showLocNote(msg){
+  const n = $("locNote"); if(!n) return;
+  n.textContent = msg||""; n.style.display = msg ? "" : "none";
+}
+$("locModeAuto").addEventListener("click", async ()=>{
+  if(geo.mode==="manual"){ geo.mode="auto"; saveGeo(); }
+  renderLocUI(); showLocNote("");
+  $("locResults").innerHTML=""; $("locSearchInput").value="";
+  $("locRefreshBtn").classList.add("spin");
+  await autoLocate();
+  $("locRefreshBtn").classList.remove("spin");
+});
+$("locModeManual").addEventListener("click", ()=>{
+  if(geo.mode!=="manual"){ geo.mode="manual"; saveGeo(); }
+  renderLocUI(); showLocNote("");
+  $("locSearchInput").focus();
+});
+$("locRefreshBtn").addEventListener("click", async ()=>{
+  if(geo.mode==="manual"){ $("locSearchInput").focus(); return; }
+  $("locRefreshBtn").classList.add("spin");
+  await autoLocate();
+  $("locRefreshBtn").classList.remove("spin");
+});
+let locSearchTimer = null, locSearchSeq = 0;
+$("locSearchInput").addEventListener("input", e=>{
+  clearTimeout(locSearchTimer);
+  const q = e.target.value.trim();
+  if(q.length<2){ $("locResults").innerHTML=""; return; }
+  locSearchTimer = setTimeout(()=>runLocSearch(q), 450);
+});
+async function runLocSearch(q){
+  const seq = ++locSearchSeq;
+  const results = $("locResults");
+  results.innerHTML = '<div class="loc-note">جارِ البحث…</div>';
+  try{
+    const url = "https://nominatim.openstreetmap.org/search?format=json&accept-language=ar&limit=6&q="+encodeURIComponent(q);
+    const r = await fetch(url, {headers:{"Accept":"application/json"}});
+    const list = await r.json();
+    if(seq!==locSearchSeq) return;
+    results.innerHTML = "";
+    if(!list || !list.length){
+      results.innerHTML = '<div class="loc-note">لم يُعثر على نتائج، جرّب اسماً آخر</div>';
+      return;
+    }
+    list.forEach(item=>{
+      const el = document.createElement("div");
+      el.className = "loc-result";
+      el.textContent = item.display_name;
+      el.addEventListener("click", ()=>{
+        const shortName = (item.display_name||"").split(",")[0].trim();
+        geo.mode = "manual";
+        applyGeo(parseFloat(item.lat), parseFloat(item.lon), {method:"manual", name:shortName, notify:false});
+        results.innerHTML = "";
+        $("locSearchInput").value = "";
+        renderLocUI();
+        showToast("تم ضبط موقعك: "+shortName+" 📍");
+      });
+      results.appendChild(el);
+    });
+  }catch(e){
+    if(seq!==locSearchSeq) return;
+    results.innerHTML = '<div class="loc-note">تعذّر البحث، تحقّق من الاتصال بالإنترنت</div>';
+  }
+}
 const PRAYER_ORDER = ["fajr","dhuhr","asr","maghrib","isha"];
 function fmtTime(h){
   let H = Math.floor(h), M = Math.floor((h-H)*60+0.5);
