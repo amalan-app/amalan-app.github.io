@@ -485,22 +485,26 @@ html.dark .p-cell.next{border-color:rgba(201,196,142,.5)}
 html.dark .abtn.edit-act{border-color:rgba(201,196,142,.45);background:rgba(201,196,142,.12);color:var(--gold-hi)}
 html.dark .abtn.del-act{border-color:rgba(224,150,124,.6);background:rgba(224,150,124,.15);color:#E8A98F}
 
-/* ======== تثبيت الصفحة عمودياً عند قلب الجوال ======== */
+/* ======== تثبيت الصفحة عمودياً عند قلب الجوال ========
+   يُستثنى المصحف فقط من هذا التثبيت (عبر html.mushaf-open) ليستفيد فعلياً
+   من الشاشة العريضة بمنظر صفحتين جنباً إلى جنب كالمصحف المطبوع المفتوح؛
+   باقي التطبيق يبقى مثبَّتاً عمودياً كما كان تماماً */
 @media screen and (orientation:landscape) and (hover:none) and (pointer:coarse) and (max-device-width:1024px){
-  html{overflow:hidden}
-  body{
+  html:not(.mushaf-open){overflow:hidden}
+  html:not(.mushaf-open) body{
     transform:rotate(-90deg);transform-origin:left top;
     width:100dvh;height:100dvw;overflow:hidden;
     position:absolute;top:100dvh;left:0;
   }
-  .app{height:100%}
+  html:not(.mushaf-open) .app{height:100%}
 }
 
 /* ======================== المصحف الشريف ======================== */
 .mushaf{position:fixed;inset:0;z-index:80;background:var(--bg0);display:none;flex-direction:column}
 .mushaf.open{display:flex}
 .m-hdr{display:flex;align-items:center;gap:8px;position:absolute;top:0;left:0;right:0;z-index:83;
-  padding:max(10px,env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--card-b);background:var(--bg1);
+  padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 10px max(14px,env(safe-area-inset-left));
+  border-bottom:1px solid var(--card-b);background:var(--bg1);
   transition:transform .38s var(--ease),opacity .38s var(--ease)}
 .mushaf.zen .m-hdr{transform:translateY(-110%);opacity:0;pointer-events:none}
 .m-title{flex:1;text-align:center;min-width:0}
@@ -508,7 +512,8 @@ html.dark .abtn.del-act{border-color:rgba(224,150,124,.6);background:rgba(224,15
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m-title .i{font-size:11px;color:var(--muted);margin-top:1px}
 .m-view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:max(8px,env(safe-area-inset-top)) 8px calc(3px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+  padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
+  overscroll-behavior:contain}
 .m-view.lock{overflow:hidden;touch-action:pan-x;overscroll-behavior:none}
 .m-view.dragging{touch-action:none}
 /* طبقة السحب الحي لتقليب الصفحات — تتبع إصبعك أثناء اللمس بدل القفز المفاجئ
@@ -561,13 +566,15 @@ html.dark .q-sur-head{border-color:rgba(201,196,142,.5)}
 .q-sur-head .m{font-size:11px;color:var(--muted);margin-top:1px}
 .q-bsm{font-family:'Amiri Quran','Amiri',serif;text-align:center;font-size:25px;margin:8px 0 4px;color:var(--ink)}
 .m-nav{position:absolute;bottom:0;left:0;right:0;z-index:83;display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;
-  padding:9px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--card-b);background:var(--bg1);
+  padding:9px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  border-top:1px solid var(--card-b);background:var(--bg1);
   transition:transform .38s var(--ease),opacity .38s var(--ease)}
 .mushaf.zen .m-nav{transform:translateY(110%);opacity:0;pointer-events:none}
 .m-sel{height:38px;border-radius:12px;border:1px solid var(--card-b);background:var(--card);
   color:var(--ink);font-family:var(--f-ui);font-size:13px;padding:0 10px;max-width:150px;outline:none}
 .m-nav .tool{height:38px}
-.q-audio{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:84;
+.q-audio{position:fixed;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));
+  bottom:calc(12px + env(safe-area-inset-bottom));z-index:84;
   display:none;align-items:center;gap:9px;padding:10px 13px;border-radius:16px;background:var(--bg2);
   border:1px solid var(--card-b);box-shadow:0 12px 34px rgba(0,0,0,.28);max-width:560px;margin:0 auto}
 .q-audio.on{display:flex}
@@ -610,7 +617,8 @@ html.dark .ay-c{border-color:rgba(255,255,255,.18)}
 /* ======== المصحف ٢٫٠ — تفاعل سلس بلا نوافذ ======== */
 .q-a.sel{background:var(--gold-dim);box-shadow:0 0 0 1.5px rgba(110,108,68,.45)}
 html.dark .q-a.sel{box-shadow:0 0 0 1.5px rgba(201,196,142,.45)}
-.ay-bar{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:86;
+.ay-bar{position:fixed;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));
+  bottom:calc(10px + env(safe-area-inset-bottom));z-index:86;
   max-width:560px;margin:0 auto;background:var(--bg2);border:1px solid var(--card-b);border-radius:18px;
   box-shadow:0 16px 44px rgba(0,0,0,.3);padding:11px 13px;
   transform:translateY(130%);opacity:0;pointer-events:none;
@@ -644,10 +652,11 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 .taf-asbab .ta-h{font-family:var(--f-display);font-size:14px;font-weight:700;color:var(--gold-hi);margin-bottom:5px}
 .taf-asbab p{font-size:13.5px;line-height:2;color:var(--ink);margin-bottom:6px}
 .taf-asbab .ta-src{font-size:10.5px;color:var(--muted)}
-.qs-panel{overflow:hidden;max-height:0;padding:0 14px;background:var(--bg1);
+.qs-panel{overflow:hidden;max-height:0;padding:0 max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));
+  background:var(--bg1);
   transition:max-height .4s var(--ease), padding .3s;position:absolute;left:0;right:0;z-index:82;
   top:calc(62px + env(safe-area-inset-top));box-shadow:0 18px 40px rgba(0,0,0,.18)}
-.qs-panel.open{max-height:62vh;padding:10px 14px;border-bottom:1px solid var(--card-b)}
+.qs-panel.open{max-height:62vh;padding:10px max(14px,env(safe-area-inset-right)) 10px max(14px,env(safe-area-inset-left));border-bottom:1px solid var(--card-b)}
 .qs-panel input{width:100%;height:42px;border-radius:13px;border:1px solid var(--card-b);
   background:var(--card);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;padding:0 13px;outline:none}
 .qs-panel .qs-res{max-height:48vh;overflow-y:auto;margin-top:6px;-webkit-overflow-scrolling:touch}
@@ -656,6 +665,17 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 /* ======== صفحة المصحف المطبوع — ملء الشاشة بلا إطارات ======== */
 .q-page15{margin:0 auto;padding:0;border:none;background:transparent;max-width:680px;
   display:flex;flex-direction:column;min-height:100%}
+/* ======== منظر الصفحتين جنباً إلى جنب (المصحف بالعرض) ========
+   يظهر فقط عند قلب الجهاز أفقياً داخل المصحف — صفحتان متقابلتان كالمصحف
+   المطبوع المفتوح فعلياً؛ ترتيبهما في المصدر (يمين ثم يسار) يطابق تلقائياً
+   اتجاه RTL للعرض flex بلا أي حاجة لعكس يدوي */
+.q-spread{display:flex;flex-direction:row;gap:22px;align-items:stretch;justify-content:center;
+  height:100%;min-height:100%}
+.q-spread .q-page15{flex:1 1 0;max-width:none;margin:0;min-width:0}
+/* خط "ثنية الكتاب" الفاصل بين الصفحتين — على الحافة اليسرى للصفحة اليمنى
+   (أول عنصر بترتيب المصدر، ويظهر يميناً تلقائياً بفضل RTL) */
+.q-spread .q-page15:first-child{border-left:1px dashed rgba(110,108,68,.35);padding-left:14px}
+html.dark .q-spread .q-page15:first-child{border-left-color:rgba(201,196,142,.3)}
 .q-phead{display:flex;justify-content:space-between;align-items:center;direction:rtl;
   font-family:var(--f-display);font-size:12.5px;color:var(--muted);padding:2px 6px 4px;flex:0 0 auto}
 .q-phead b{color:var(--gold-hi);font-weight:700}
@@ -2689,8 +2709,12 @@ const M = {
   prefs:{mode:"pages", page:1, surah:1, reciter:null, reciterName:"", tafsir:null, colors:{}, marks:[], zoom:1, lastColor:null},
   recitations:[], tafsirs:[], normArr:null,
   audio:null, playing:null, cont:true, repeatN:1, repeatLeft:0,
-  sel:null, prevPos:null, tafCache:{}, urlCache:{}, opened:false
+  sel:null, prevPos:null, tafCache:{}, urlCache:{}, opened:false,
+  landscape:false /* وضع الصفحتين جنباً إلى جنب عند قلب الجهاز أفقياً داخل المصحف فقط */
 };
+/* نفس شرط CSS الذي يُلغي التثبيت العمودي الاصطناعي (انظر أدناه) — الجهاز
+   الفعلي الذي يستحق منظر "الصفحتين المفتوحتين" هو الهاتف المحمول باللمس فقط */
+const LQ = window.matchMedia("(orientation:landscape) and (hover:none) and (pointer:coarse) and (max-device-width:1024px)");
 try{ const p = JSON.parse(localStorage.getItem(QP_KEY)||"null"); if(p) Object.assign(M.prefs, p); }catch(e){}
 M.prefs.mode = "pages"; M.prefs.zoom = 1; /* وضعية واحدة: صفحات المصحف */
 function savePrefs(){ try{ localStorage.setItem(QP_KEY, JSON.stringify(M.prefs)); }catch(e){} }
@@ -2910,6 +2934,78 @@ function fitPage(){
   const fs = fitPageBase(mv, inner);
   applyLineFit(mv, inner, fs);
 }
+/* --- ضبط مقاس منظر الصفحتين معاً (المصحف بالعرض) ---
+   نفس حسابات fitPageBase/applyLineFit تماماً، لكن مطبَّقة على كل صفحة من
+   الصفحتين المتقابلتين على حدة (كل صفحة لها --qfs الخاص بها)، مع حساب
+   مقاس الخط المشترك مرة واحدة من الصفحة اليمنى فقط لأن الصفحتين متطابقتا
+   العرض والارتفاع تماماً بحكم تناظر flex — فيُطبَّق نفس المقاس على الاثنتين */
+function fitSpread(){
+  const mv = $("mView");
+  const pages = [...mv.querySelectorAll(".q-page15")];
+  if(!pages.length) return;
+  if(pages[0].classList.contains("centered")){
+    const cs0 = getComputedStyle(mv);
+    const availH = mv.clientHeight - parseFloat(cs0.paddingTop) - parseFloat(cs0.paddingBottom);
+    pages.forEach(page=>{
+      const inner = page.querySelector(".q-page-inner15");
+      if(!inner) return;
+      inner.style.height="";
+      const wc = inner.clientWidth - 24;
+      let fs = Math.min(wc*0.062, 30);
+      inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
+      /* ضمانة الارتفاع: صفحتا الإطار المزخرف (الفاتحة وبداية البقرة) تُحسَبان
+         على أساس العرض فقط أصلاً — في الشاشات القصيرة (كالمصحف بالعرض) قد
+         يتجاوز الإطار الارتفاع المتاح فيُقصّ من الأسفل؛ هذه الضمانة تمنع ذلك
+         بتصغير الخط تناسبياً حتى يلائم الارتفاع الحقيقي المتاح */
+      const budget = Math.max(availH, 120);
+      /* الإطار المزخرف يضم حدوداً وحشوة ثابتة لا تصغر مع الخط، فتصحيح نسبي
+         واحد لا يكفي دوماً — تكرار قصير (حتى ٣ مرات) يضمن الملاءمة فعلياً */
+      for(let i=0;i<3;i++){
+        const total = page.scrollHeight;
+        if(total<=budget) break;
+        fs = Math.max(fs * (budget/total) * 0.94, 11);
+        inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
+      }
+    });
+    return;
+  }
+  const refPage = pages[0];
+  const phd = refPage.querySelector(".q-phead"), pnm = refPage.querySelector(".q-pnum");
+  const extra = (phd?phd.offsetHeight:0) + (pnm?pnm.offsetHeight:0) + 6;
+  const cs = getComputedStyle(mv);
+  const avail = mv.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - extra;
+  const refInner = refPage.querySelector(".q-page-inner15");
+  const w = (refInner ? refInner.clientWidth : mv.clientWidth) - 6;
+  const lines = Math.max(refInner ? refInner.children.length : 8, 8);
+  const fs = Math.min(w*0.0555, avail/lines/1.74);
+  pages.forEach(page=>{
+    const inner = page.querySelector(".q-page-inner15");
+    if(!inner) return;
+    inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
+    inner.style.height = Math.max(avail, 200)+"px";
+  });
+  pages.forEach(page=>{
+    const inner = page.querySelector(".q-page-inner15");
+    if(!inner) return;
+    const cands = [...inner.querySelectorAll(".q-line")].filter(l=>!l.classList.contains("qcen"));
+    cands.forEach(l=>{ l.classList.remove("qshort"); l.classList.add("qmeasure"); });
+    void inner.offsetWidth;
+    cands.forEach(l=>{
+      const kids=[...l.children];
+      const nat = kids.reduce((a,k)=>a+k.getBoundingClientRect().width,0);
+      l.classList.remove("qmeasure");
+      if(kids.length && nat < l.clientWidth*0.82) l.classList.add("qshort");
+    });
+    let over = 1;
+    inner.querySelectorAll(".q-line").forEach(l=>{
+      if(l.scrollWidth > l.clientWidth+1) over = Math.max(over, l.scrollWidth/l.clientWidth);
+    });
+    if(over>1.003){
+      const cur = parseFloat(inner.style.getPropertyValue("--qfs"))||fs;
+      inner.style.setProperty("--qfs", (cur/over*0.99).toFixed(2)+"px");
+    }
+  });
+}
 /* --- بناء صفحة مطابقة للمصحف المطبوع: ١٥ سطراً بالتقسيم الرسمي --- */
 let lastPageN = 0;
 /* ذاكرة مؤقتة لكل صفحة (HTML الجاهز + مقاس الخط) — تجعل العودة لصفحة
@@ -2925,7 +3021,7 @@ async function buildPageHTML(p, noAnim){
   const list = (M.byPage||{})[p]||[];
   const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
   const phead = '<div class="q-phead"><b>'+(names?"سُورَةُ "+names:"")+'</b><span>الجزء '+fmt(list.length?list[0].juz:1)+'</span></div>';
-  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+(noAnim?" noanim":"")+'" style="--pgx:'+dir+'">'+phead+'<div class="q-page-inner15">';
+  let h = '<div class="q-page q-page15'+((p<=2)?" centered":"")+(noAnim?" noanim":"")+'" data-p="'+p+'" style="--pgx:'+dir+'">'+phead+'<div class="q-page-inner15">';
   pg.l.forEach(L=>{
     const hasS = L.some(g=>g[2]==="s");
     const center = p<=2 || hasS || L.some(g=>g[2]==="b");
@@ -3011,6 +3107,7 @@ async function prefetchAround(p){
   prefetchBusy = false;
 }
 async function renderPage(p){
+  if(M.landscape) return renderSpread(p); /* المصحف بالعرض: صفحتان معاً دوماً */
   p = Math.max(1, Math.min(604, p));
   M.prefs.page = p; M.prefs.mode = "pages";
   const list = M.byPage[p]||[];
@@ -3052,17 +3149,70 @@ async function renderPage(p){
   if(QP) [p+1, p-1].forEach(q=>{ if(q>=1&&q<=604) ensureQcfFont(QP[q-1].f).catch(()=>{}); });
 }
 function rerender(){ renderPage(M.prefs.page); }
+/* --- عرض صفحتين معاً جنباً إلى جنب (المصحف بالعرض) ---
+   rightP/leftP زوج ثابت دوماً (فردي، زوجي) تماماً كترقيم صفحات المصحف
+   المطبوع الحقيقي (كل جزء وكل سورة تقريباً يبدأ صفحة فردية على اليمين) */
+function spreadPair(p){
+  p = Math.max(1, Math.min(604, p));
+  const rightP = (p%2===1) ? p : p-1;
+  return [Math.max(1,rightP), Math.min(604,rightP+1)];
+}
+async function renderSpread(refPage){
+  const [rightP, leftP] = spreadPair(refPage);
+  M.prefs.page = rightP; M.prefs.mode = "pages";
+  const list = M.byPage[rightP]||[];
+  if(list.length) M.prefs.surah = list[0].s;
+  const mv = $("mView");
+  const cR = pageFastCache[rightP], cL = pageFastCache[leftP];
+  if(!cR || !cL) mv.innerHTML = '<div class="m-load"><div class="big">﷽</div>يُجهَّز المصحف الشريف…</div>';
+  let hR, hL;
+  try{
+    [hR, hL] = await Promise.all([
+      cR ? Promise.resolve(cR.html) : buildPageHTML(rightP, true),
+      cL ? Promise.resolve(cL.html) : buildPageHTML(leftP, true)
+    ]);
+  }catch(e){
+    if(M.landscape && M.prefs.page===rightP) mv.innerHTML = '<div class="m-load">تعذّر تحميل المصحف — تحقق من اتصال الإنترنت ثم أعد المحاولة</div>';
+    return;
+  }
+  if(!M.landscape || M.prefs.page!==rightP) return; /* تغيّر الوضع أو الصفحة أثناء التحميل */
+  mv.innerHTML = '<div class="q-spread">'+hR+hL+'</div>';
+  mv.dataset.curPage = "";
+  mv.classList.add("lock");
+  const iR = mv.querySelector('.q-page15[data-p="'+rightP+'"] .q-page-inner15');
+  if(iR && cR && cR.qfs) iR.style.setProperty("--qfs", cR.qfs);
+  const iL = mv.querySelector('.q-page15[data-p="'+leftP+'"] .q-page-inner15');
+  if(iL && cL && cL.qfs) iL.style.setProperty("--qfs", cL.qfs);
+  fitSpread();
+  /* تحديث الذاكرة المؤقتة لكل صفحة على حدة بالنسخة النهائية المصحَّحة —
+     بحيث لو عاد المستخدم للوضع العمودي تُعرض له كل صفحة بمقاسها الصحيح */
+  mv.querySelectorAll(".q-page15[data-p]").forEach(el=>{
+    const pn = +el.dataset.p;
+    const inner = el.querySelector(".q-page-inner15");
+    pageFastCache[pn] = {html: el.outerHTML, qfs: inner ? inner.style.getPropertyValue("--qfs") : null};
+  });
+  mv.scrollTop = 0;
+  const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
+  $("mSurName").textContent = names || "المصحف الشريف";
+  $("mInfo").textContent = "صفحتا "+fmt(rightP)+"-"+fmt(leftP)+" · الجزء "+fmt(list.length?list[0].juz:1);
+  $("mSurSel").value = M.prefs.surah; $("mPageSel").value = rightP; $("mSlider").value = rightP;
+  savePrefs();
+  if(QP) [rightP-1, leftP+1].forEach(q=>{ if(q>=1&&q<=604) ensureQcfFont(QP[q-1].f).catch(()=>{}); });
+}
 /* بعد أي تغيير على تلوين/علامة آية في الصفحة المعروضة حالياً، نحدّث الذاكرة
    المؤقتة (pageFastCache) لتطابق واجهة العرض الحيّة فوراً — وإلا فإن أي عودة
    لاحقة لهذه الصفحة (بالتنقل أو بإعادة فتح المصحف) ستستبدل اللون/العلامة
    الجديدة بالنسخة القديمة المخزَّنة مسبقاً، فيظهر اللون للحظة ثم "يختفي" عند
-   أي إعادة رسم لاحقة لنفس الصفحة */
+   أي إعادة رسم لاحقة لنفس الصفحة — يعمل بنفس الطريقة تماماً سواء كانت صفحة
+   واحدة معروضة أو صفحتان معاً (منظر العرض)، لأنه يعتمد على data-p لكل صفحة
+   على حدة بدل افتراض وجود صفحة واحدة فقط */
 function syncCachedPage(){
   const mv = $("mView");
-  const p = M.prefs.page;
-  if(mv.dataset.curPage!==String(p)) return;
-  const cached = pageFastCache[p];
-  pageFastCache[p] = {html: mv.innerHTML, qfs: cached ? cached.qfs : null};
+  mv.querySelectorAll(".q-page15[data-p]").forEach(el=>{
+    const pn = +el.dataset.p;
+    const cached = pageFastCache[pn];
+    pageFastCache[pn] = {html: el.outerHTML, qfs: cached ? cached.qfs : null};
+  });
 }
 async function goToKey(key){
   const o = ayObj(key); if(!o) return;
@@ -3524,6 +3674,7 @@ async function pgDragEnsure(p, container, token){
 const mDragLayer = $("mDragLayer");
 mvEl.addEventListener("touchstart", e=>{
   if(e.touches.length!==1) return;
+  if(M.landscape) return; /* المصحف بالعرض: تقليب الصفحتين بالأزرار/الشريط فقط، لا سحب باللمس */
   pgDrag = { sx:e.touches[0].clientX, sy:e.touches[0].clientY, dx:0, committed:false, w:(mvEl.clientWidth||320) };
 }, {passive:true});
 mvEl.addEventListener("touchmove", e=>{
@@ -3693,6 +3844,7 @@ function slFlush(){
   slRafPending=false;
   const p = slRafP;
   if(p==null) return;
+  if(M.landscape) return; /* المصحف بالعرض: بلا معاينة حيّة أثناء السحب، تُعرض الصفحتان الصحيحتان فور الإفلات */
   if(QP && M.quran) renderPageDrag(p);
 }
 $("mSlider").addEventListener("input", ()=>{
@@ -3714,11 +3866,11 @@ $("mSlider").addEventListener("change", ()=>{
 /* ---------- التنقل ---------- */
 $("mPrev").addEventListener("click", ()=>{
   hideAyBar();
-  renderPage(M.prefs.page-1);
+  renderPage(M.prefs.page - (M.landscape?2:1));
 });
 $("mNext").addEventListener("click", ()=>{
   hideAyBar();
-  renderPage(M.prefs.page+1);
+  renderPage(M.prefs.page + (M.landscape?2:1));
 });
 $("mSurSel").addEventListener("change", ()=>{
   hideAyBar();
@@ -3727,12 +3879,26 @@ $("mSurSel").addEventListener("change", ()=>{
 });
 $("mPageSel").addEventListener("change", ()=>{ hideAyBar(); renderPage(+$("mPageSel").value); });
 /* إعادة ضبط مقاس الصفحة عند تدوير الجهاز أو تغيّر المقاس */
-window.addEventListener("resize", ()=>{ if($("mView").querySelector(".q-page-inner15")) fitPage(); });
+window.addEventListener("resize", ()=>{
+  if(M.landscape){ if($("mView").querySelector(".q-page-inner15")) fitSpread(); }
+  else if($("mView").querySelector(".q-page-inner15")) fitPage();
+});
+/* تبديل منظر المصحف تلقائياً بين صفحة واحدة (عمودي) وصفحتين معاً (أفقي)
+   فور قلب الجهاز فعلياً أثناء فتح المصحف — لا يؤثر على بقية شاشات التطبيق */
+LQ.addEventListener("change", ()=>{
+  if(!$("mushaf").classList.contains("open")) return;
+  M.landscape = LQ.matches;
+  hideAyBar();
+  $("qsPanel").classList.remove("open");
+  rerender();
+});
 
 /* ---------- فتح وإغلاق ---------- */
 $("btnMushaf").addEventListener("click", async ()=>{
   $("mushaf").classList.add("open");
   $("mushaf").classList.add("zen"); /* صفحة صافية — الأدوات بلمسة المنتصف */
+  document.documentElement.classList.add("mushaf-open"); /* يستثني المصحف من التثبيت العمودي الاصطناعي عند القلب أفقياً */
+  M.landscape = LQ.matches;
   loadQcfData().catch(()=>{}); /* تهيئة بيانات المصحف المطبوع مبكراً */
   const ok = await ensureQuran();
   if(!ok) return;
@@ -3753,6 +3919,8 @@ $("mClose").addEventListener("click", ()=>{
   hideAyBar();
   savePrefs();
   $("mushaf").classList.remove("open");
+  document.documentElement.classList.remove("mushaf-open");
+  M.landscape = false;
 });
 })();
 </script>
