@@ -2686,7 +2686,7 @@ const { $, fmt, showToast, buzz } = window.AMALAN;
 const QP_KEY = "amalan:quran_prefs";
 const M = {
   quran:null, surahs:null, byPage:null, flat:null, keyIdx:{},
-  prefs:{mode:"pages", page:1, surah:1, reciter:null, reciterName:"", tafsir:null, colors:{}, marks:[], zoom:1},
+  prefs:{mode:"pages", page:1, surah:1, reciter:null, reciterName:"", tafsir:null, colors:{}, marks:[], zoom:1, lastColor:null},
   recitations:[], tafsirs:[], normArr:null,
   audio:null, playing:null, cont:true, repeatN:1, repeatLeft:0,
   sel:null, prevPos:null, tafCache:{}, urlCache:{}, opened:false
@@ -3052,6 +3052,18 @@ async function renderPage(p){
   if(QP) [p+1, p-1].forEach(q=>{ if(q>=1&&q<=604) ensureQcfFont(QP[q-1].f).catch(()=>{}); });
 }
 function rerender(){ renderPage(M.prefs.page); }
+/* بعد أي تغيير على تلوين/علامة آية في الصفحة المعروضة حالياً، نحدّث الذاكرة
+   المؤقتة (pageFastCache) لتطابق واجهة العرض الحيّة فوراً — وإلا فإن أي عودة
+   لاحقة لهذه الصفحة (بالتنقل أو بإعادة فتح المصحف) ستستبدل اللون/العلامة
+   الجديدة بالنسخة القديمة المخزَّنة مسبقاً، فيظهر اللون للحظة ثم "يختفي" عند
+   أي إعادة رسم لاحقة لنفس الصفحة */
+function syncCachedPage(){
+  const mv = $("mView");
+  const p = M.prefs.page;
+  if(mv.dataset.curPage!==String(p)) return;
+  const cached = pageFastCache[p];
+  pageFastCache[p] = {html: mv.innerHTML, qfs: cached ? cached.qfs : null};
+}
 async function goToKey(key){
   const o = ayObj(key); if(!o) return;
   await renderPage(o.page);
@@ -3329,13 +3341,20 @@ document.querySelectorAll("#ayBar .ay-c").forEach(c=>{
   c.addEventListener("click", ()=>{
     if(!M.sel) return;
     const v = +c.dataset.c;
-    if(v===0) delete M.prefs.colors[M.sel]; else M.prefs.colors[M.sel] = v;
+    if(v===0){
+      delete M.prefs.colors[M.sel];
+      if(M.prefs.lastColor && M.prefs.lastColor.key===M.sel) M.prefs.lastColor = null;
+    } else {
+      M.prefs.colors[M.sel] = v;
+      M.prefs.lastColor = {key:M.sel, ts:Date.now()};
+    }
     savePrefs();
     $("mView").querySelectorAll('[data-k="'+M.sel+'"]').forEach(el=>{
       el.className = el.className.replace(/\bqc\d\b/g,"").trim();
       if(v) el.classList.add("qc"+v);
       el.classList.remove("sel"); /* يظهر اللون مباشرة */
     });
+    syncCachedPage();
     syncAyBar();
   });
 });
@@ -3371,6 +3390,7 @@ $("abMark").addEventListener("click", ()=>{
   $("mView").querySelectorAll('[data-k="'+M.sel+'"]').forEach(el=>{
     el.classList.toggle("q-mark", on); el.classList.toggle("qmk", on);
   });
+  syncCachedPage();
 });
 $("abCopy").addEventListener("click", async ()=>{
   if(!M.sel) return;
@@ -3616,15 +3636,33 @@ function doSearch(){
 }
 function renderMarksList(){
   const box = $("qsRes");
-  if(!M.prefs.marks.length){ box.innerHTML = '<div class="qs-hint">اكتب كلمة للبحث في المصحف كاملاً — وعلاماتك المحفوظة 🔖 ستظهر هنا</div>'; return; }
-  box.innerHTML = '<div class="qs-hint">🔖 علاماتك المحفوظة</div>';
-  M.prefs.marks.forEach(k=>{
-    const o = ayObj(k); if(!o) return;
+  const lcKey = M.prefs.lastColor && M.prefs.lastColor.key;
+  const lc = lcKey && ayObj(lcKey) ? lcKey : null;
+  if(!M.prefs.marks.length && !lc){
+    box.innerHTML = '<div class="qs-hint">اكتب كلمة للبحث في المصحف كاملاً — وعلاماتك المحفوظة 🔖 ستظهر هنا</div>';
+    return;
+  }
+  box.innerHTML = "";
+  if(lc){
+    const o = ayObj(lc);
+    const h = document.createElement("div"); h.className = "qs-hint"; h.textContent = "🎨 آخر آية لوّنتها";
+    box.appendChild(h);
     const d = document.createElement("div"); d.className = "qs-item";
-    d.innerHTML = '<div class="w">'+esc(o.text.slice(0,90))+(o.text.length>90?"…":"")+'</div><div class="rf">'+refTxt(k)+' · صفحة '+fmt(o.page)+'</div>';
-    d.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); goToKey(k); });
+    d.innerHTML = '<div class="w">'+esc(o.text.slice(0,90))+(o.text.length>90?"…":"")+'</div><div class="rf">'+refTxt(lc)+' · صفحة '+fmt(o.page)+'</div>';
+    d.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); goToKey(lc); });
     box.appendChild(d);
-  });
+  }
+  if(M.prefs.marks.length){
+    const h2 = document.createElement("div"); h2.className = "qs-hint"; h2.textContent = "🔖 علاماتك المحفوظة";
+    box.appendChild(h2);
+    M.prefs.marks.forEach(k=>{
+      const o = ayObj(k); if(!o) return;
+      const d = document.createElement("div"); d.className = "qs-item";
+      d.innerHTML = '<div class="w">'+esc(o.text.slice(0,90))+(o.text.length>90?"…":"")+'</div><div class="rf">'+refTxt(k)+' · صفحة '+fmt(o.page)+'</div>';
+      d.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); goToKey(k); });
+      box.appendChild(d);
+    });
+  }
 }
 $("qsInput").addEventListener("input", ()=>{ clearTimeout(qsTimer); qsTimer = setTimeout(doSearch, 260); });
 $("mSearchBtn").addEventListener("click", ()=>{
