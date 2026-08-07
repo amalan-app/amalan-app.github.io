@@ -665,17 +665,6 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 /* ======== صفحة المصحف المطبوع — ملء الشاشة بلا إطارات ======== */
 .q-page15{margin:0 auto;padding:0;border:none;background:transparent;max-width:680px;
   display:flex;flex-direction:column;min-height:100%}
-/* ======== منظر الصفحتين جنباً إلى جنب (المصحف بالعرض) ========
-   يظهر فقط عند قلب الجهاز أفقياً داخل المصحف — صفحتان متقابلتان كالمصحف
-   المطبوع المفتوح فعلياً؛ ترتيبهما في المصدر (يمين ثم يسار) يطابق تلقائياً
-   اتجاه RTL للعرض flex بلا أي حاجة لعكس يدوي */
-.q-spread{display:flex;flex-direction:row;gap:22px;align-items:stretch;justify-content:center;
-  height:100%;min-height:100%}
-.q-spread .q-page15{flex:1 1 0;max-width:none;margin:0;min-width:0}
-/* خط "ثنية الكتاب" الفاصل بين الصفحتين — على الحافة اليسرى للصفحة اليمنى
-   (أول عنصر بترتيب المصدر، ويظهر يميناً تلقائياً بفضل RTL) */
-.q-spread .q-page15:first-child{border-left:1px dashed rgba(110,108,68,.35);padding-left:14px}
-html.dark .q-spread .q-page15:first-child{border-left-color:rgba(201,196,142,.3)}
 .q-phead{display:flex;justify-content:space-between;align-items:center;direction:rtl;
   font-family:var(--f-display);font-size:12.5px;color:var(--muted);padding:2px 6px 4px;flex:0 0 auto}
 .q-phead b{color:var(--gold-hi);font-weight:700}
@@ -2706,17 +2695,24 @@ const { $, fmt, showToast, buzz } = window.AMALAN;
 const QP_KEY = "amalan:quran_prefs";
 const M = {
   quran:null, surahs:null, byPage:null, flat:null, keyIdx:{},
-  prefs:{mode:"pages", page:1, surah:1, reciter:null, reciterName:"", tafsir:null, colors:{}, marks:[], zoom:1, lastColor:null},
+  prefs:{mode:"pages", page:1, surah:1, reciter:null, reciterName:"", tafsir:null, colors:{}, marks:[], zoom:1, lastColor:null, lastByColor:{}},
   recitations:[], tafsirs:[], normArr:null,
   audio:null, playing:null, cont:true, repeatN:1, repeatLeft:0,
   sel:null, prevPos:null, tafCache:{}, urlCache:{}, opened:false,
-  landscape:false /* وضع الصفحتين جنباً إلى جنب عند قلب الجهاز أفقياً داخل المصحف فقط */
+  landscape:false /* هل المصحف مفتوح والجهاز بوضع أفقي — صفحة واحدة بعرض مريح وقابلة للتمرير */
 };
 /* نفس شرط CSS الذي يُلغي التثبيت العمودي الاصطناعي (انظر أدناه) — الجهاز
    الفعلي الذي يستحق منظر "الصفحتين المفتوحتين" هو الهاتف المحمول باللمس فقط */
 const LQ = window.matchMedia("(orientation:landscape) and (hover:none) and (pointer:coarse) and (max-device-width:1024px)");
 try{ const p = JSON.parse(localStorage.getItem(QP_KEY)||"null"); if(p) Object.assign(M.prefs, p); }catch(e){}
 M.prefs.mode = "pages"; M.prefs.zoom = 1; /* وضعية واحدة: صفحات المصحف */
+if(!M.prefs.lastByColor) M.prefs.lastByColor = {};
+/* توافق مع بيانات قديمة: كانت "آخر آية لوّنتها" تُحفظ بلا تحديد اللون —
+   نستنتج لونها الآن من خريطة الألوان الحالية إن أمكن كي لا يضيع سجل المستخدم */
+if(M.prefs.lastColor && M.prefs.lastColor.key && !Object.keys(M.prefs.lastByColor).length){
+  const cv = M.prefs.colors[M.prefs.lastColor.key];
+  if(cv) M.prefs.lastByColor[cv] = M.prefs.lastColor;
+}
 function savePrefs(){ try{ localStorage.setItem(QP_KEY, JSON.stringify(M.prefs)); }catch(e){} }
 
 /* ---------- تخزين IndexedDB ---------- */
@@ -2882,12 +2878,20 @@ function fitPageBase(mv, inner){
     inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
     return fs;
   }
+  const w = inner.clientWidth - 6;
+  if(M.landscape){
+    /* المصحف بالعرض: صفحة واحدة بحجم خط مريح للقراءة (على أساس العرض فقط)
+       بلا أي ضغط لملاءمة الارتفاع القصير — تُترك قابلة للتمرير بدل ذلك */
+    inner.style.height="";
+    const fs = Math.min(w*0.0555, 30);
+    inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
+    return fs;
+  }
   const page = mv.querySelector(".q-page15");
   const phd = page.querySelector(".q-phead"), pnm = page.querySelector(".q-pnum");
   const extra = (phd?phd.offsetHeight:0) + (pnm?pnm.offsetHeight:0) + 6;
   const cs=getComputedStyle(mv);
   const avail = mv.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - extra;
-  const w = inner.clientWidth - 6;
   const lines = Math.max(inner.children.length, 8);
   const fs = Math.min(w*0.0555, avail/lines/1.74);
   inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
@@ -2933,78 +2937,6 @@ function fitPage(){
   if(!inner) return;
   const fs = fitPageBase(mv, inner);
   applyLineFit(mv, inner, fs);
-}
-/* --- ضبط مقاس منظر الصفحتين معاً (المصحف بالعرض) ---
-   نفس حسابات fitPageBase/applyLineFit تماماً، لكن مطبَّقة على كل صفحة من
-   الصفحتين المتقابلتين على حدة (كل صفحة لها --qfs الخاص بها)، مع حساب
-   مقاس الخط المشترك مرة واحدة من الصفحة اليمنى فقط لأن الصفحتين متطابقتا
-   العرض والارتفاع تماماً بحكم تناظر flex — فيُطبَّق نفس المقاس على الاثنتين */
-function fitSpread(){
-  const mv = $("mView");
-  const pages = [...mv.querySelectorAll(".q-page15")];
-  if(!pages.length) return;
-  if(pages[0].classList.contains("centered")){
-    const cs0 = getComputedStyle(mv);
-    const availH = mv.clientHeight - parseFloat(cs0.paddingTop) - parseFloat(cs0.paddingBottom);
-    pages.forEach(page=>{
-      const inner = page.querySelector(".q-page-inner15");
-      if(!inner) return;
-      inner.style.height="";
-      const wc = inner.clientWidth - 24;
-      let fs = Math.min(wc*0.062, 30);
-      inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
-      /* ضمانة الارتفاع: صفحتا الإطار المزخرف (الفاتحة وبداية البقرة) تُحسَبان
-         على أساس العرض فقط أصلاً — في الشاشات القصيرة (كالمصحف بالعرض) قد
-         يتجاوز الإطار الارتفاع المتاح فيُقصّ من الأسفل؛ هذه الضمانة تمنع ذلك
-         بتصغير الخط تناسبياً حتى يلائم الارتفاع الحقيقي المتاح */
-      const budget = Math.max(availH, 120);
-      /* الإطار المزخرف يضم حدوداً وحشوة ثابتة لا تصغر مع الخط، فتصحيح نسبي
-         واحد لا يكفي دوماً — تكرار قصير (حتى ٣ مرات) يضمن الملاءمة فعلياً */
-      for(let i=0;i<3;i++){
-        const total = page.scrollHeight;
-        if(total<=budget) break;
-        fs = Math.max(fs * (budget/total) * 0.94, 11);
-        inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
-      }
-    });
-    return;
-  }
-  const refPage = pages[0];
-  const phd = refPage.querySelector(".q-phead"), pnm = refPage.querySelector(".q-pnum");
-  const extra = (phd?phd.offsetHeight:0) + (pnm?pnm.offsetHeight:0) + 6;
-  const cs = getComputedStyle(mv);
-  const avail = mv.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - extra;
-  const refInner = refPage.querySelector(".q-page-inner15");
-  const w = (refInner ? refInner.clientWidth : mv.clientWidth) - 6;
-  const lines = Math.max(refInner ? refInner.children.length : 8, 8);
-  const fs = Math.min(w*0.0555, avail/lines/1.74);
-  pages.forEach(page=>{
-    const inner = page.querySelector(".q-page-inner15");
-    if(!inner) return;
-    inner.style.setProperty("--qfs", fs.toFixed(2)+"px");
-    inner.style.height = Math.max(avail, 200)+"px";
-  });
-  pages.forEach(page=>{
-    const inner = page.querySelector(".q-page-inner15");
-    if(!inner) return;
-    const cands = [...inner.querySelectorAll(".q-line")].filter(l=>!l.classList.contains("qcen"));
-    cands.forEach(l=>{ l.classList.remove("qshort"); l.classList.add("qmeasure"); });
-    void inner.offsetWidth;
-    cands.forEach(l=>{
-      const kids=[...l.children];
-      const nat = kids.reduce((a,k)=>a+k.getBoundingClientRect().width,0);
-      l.classList.remove("qmeasure");
-      if(kids.length && nat < l.clientWidth*0.82) l.classList.add("qshort");
-    });
-    let over = 1;
-    inner.querySelectorAll(".q-line").forEach(l=>{
-      if(l.scrollWidth > l.clientWidth+1) over = Math.max(over, l.scrollWidth/l.clientWidth);
-    });
-    if(over>1.003){
-      const cur = parseFloat(inner.style.getPropertyValue("--qfs"))||fs;
-      inner.style.setProperty("--qfs", (cur/over*0.99).toFixed(2)+"px");
-    }
-  });
 }
 /* --- بناء صفحة مطابقة للمصحف المطبوع: ١٥ سطراً بالتقسيم الرسمي --- */
 let lastPageN = 0;
@@ -3107,7 +3039,6 @@ async function prefetchAround(p){
   prefetchBusy = false;
 }
 async function renderPage(p){
-  if(M.landscape) return renderSpread(p); /* المصحف بالعرض: صفحتان معاً دوماً */
   p = Math.max(1, Math.min(604, p));
   M.prefs.page = p; M.prefs.mode = "pages";
   const list = M.byPage[p]||[];
@@ -3120,7 +3051,7 @@ async function renderPage(p){
     const mv0 = $("mView");
     mv0.innerHTML = preCached.html;
     mv0.dataset.curPage = String(p);
-    mv0.classList.add("lock");
+    mv0.classList.toggle("lock", !M.landscape);
     const inner0 = mv0.querySelector(".q-page-inner15");
     if(inner0){ if(preCached.qfs) inner0.style.setProperty("--qfs", preCached.qfs); else fitPageBase(mv0, inner0); }
   }
@@ -3137,8 +3068,9 @@ async function renderPage(p){
     await auth;
   }
   if(M.prefs.page!==p) return;
-  /* صفحة مشدودة: بلا تمرير في المقاس الأصلي — تمرير حر عند التكبير */
-  $("mView").classList.toggle("lock", !!$("mView").querySelector(".q-page15"));
+  /* صفحة مشدودة: بلا تمرير في المقاس الأصلي — تمرير حر عند التكبير أو عند
+     المصحف بالعرض (حيث نترك النص بحجمه المريح ونسمح بتمرير القراءة) */
+  $("mView").classList.toggle("lock", !M.landscape && !!$("mView").querySelector(".q-page15"));
   $("mView").scrollTop = 0;
   const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
   $("mSurName").textContent = names || "المصحف الشريف";
@@ -3149,63 +3081,11 @@ async function renderPage(p){
   if(QP) [p+1, p-1].forEach(q=>{ if(q>=1&&q<=604) ensureQcfFont(QP[q-1].f).catch(()=>{}); });
 }
 function rerender(){ renderPage(M.prefs.page); }
-/* --- عرض صفحتين معاً جنباً إلى جنب (المصحف بالعرض) ---
-   rightP/leftP زوج ثابت دوماً (فردي، زوجي) تماماً كترقيم صفحات المصحف
-   المطبوع الحقيقي (كل جزء وكل سورة تقريباً يبدأ صفحة فردية على اليمين) */
-function spreadPair(p){
-  p = Math.max(1, Math.min(604, p));
-  const rightP = (p%2===1) ? p : p-1;
-  return [Math.max(1,rightP), Math.min(604,rightP+1)];
-}
-async function renderSpread(refPage){
-  const [rightP, leftP] = spreadPair(refPage);
-  M.prefs.page = rightP; M.prefs.mode = "pages";
-  const list = M.byPage[rightP]||[];
-  if(list.length) M.prefs.surah = list[0].s;
-  const mv = $("mView");
-  const cR = pageFastCache[rightP], cL = pageFastCache[leftP];
-  if(!cR || !cL) mv.innerHTML = '<div class="m-load"><div class="big">﷽</div>يُجهَّز المصحف الشريف…</div>';
-  let hR, hL;
-  try{
-    [hR, hL] = await Promise.all([
-      cR ? Promise.resolve(cR.html) : buildPageHTML(rightP, true),
-      cL ? Promise.resolve(cL.html) : buildPageHTML(leftP, true)
-    ]);
-  }catch(e){
-    if(M.landscape && M.prefs.page===rightP) mv.innerHTML = '<div class="m-load">تعذّر تحميل المصحف — تحقق من اتصال الإنترنت ثم أعد المحاولة</div>';
-    return;
-  }
-  if(!M.landscape || M.prefs.page!==rightP) return; /* تغيّر الوضع أو الصفحة أثناء التحميل */
-  mv.innerHTML = '<div class="q-spread">'+hR+hL+'</div>';
-  mv.dataset.curPage = "";
-  mv.classList.add("lock");
-  const iR = mv.querySelector('.q-page15[data-p="'+rightP+'"] .q-page-inner15');
-  if(iR && cR && cR.qfs) iR.style.setProperty("--qfs", cR.qfs);
-  const iL = mv.querySelector('.q-page15[data-p="'+leftP+'"] .q-page-inner15');
-  if(iL && cL && cL.qfs) iL.style.setProperty("--qfs", cL.qfs);
-  fitSpread();
-  /* تحديث الذاكرة المؤقتة لكل صفحة على حدة بالنسخة النهائية المصحَّحة —
-     بحيث لو عاد المستخدم للوضع العمودي تُعرض له كل صفحة بمقاسها الصحيح */
-  mv.querySelectorAll(".q-page15[data-p]").forEach(el=>{
-    const pn = +el.dataset.p;
-    const inner = el.querySelector(".q-page-inner15");
-    pageFastCache[pn] = {html: el.outerHTML, qfs: inner ? inner.style.getPropertyValue("--qfs") : null};
-  });
-  mv.scrollTop = 0;
-  const names = [...new Set(list.map(o=>surOf(o.s).name))].join(" · ");
-  $("mSurName").textContent = names || "المصحف الشريف";
-  $("mInfo").textContent = "صفحتا "+fmt(rightP)+"-"+fmt(leftP)+" · الجزء "+fmt(list.length?list[0].juz:1);
-  $("mSurSel").value = M.prefs.surah; $("mPageSel").value = rightP; $("mSlider").value = rightP;
-  savePrefs();
-  if(QP) [rightP-1, leftP+1].forEach(q=>{ if(q>=1&&q<=604) ensureQcfFont(QP[q-1].f).catch(()=>{}); });
-}
 /* بعد أي تغيير على تلوين/علامة آية في الصفحة المعروضة حالياً، نحدّث الذاكرة
    المؤقتة (pageFastCache) لتطابق واجهة العرض الحيّة فوراً — وإلا فإن أي عودة
    لاحقة لهذه الصفحة (بالتنقل أو بإعادة فتح المصحف) ستستبدل اللون/العلامة
    الجديدة بالنسخة القديمة المخزَّنة مسبقاً، فيظهر اللون للحظة ثم "يختفي" عند
-   أي إعادة رسم لاحقة لنفس الصفحة — يعمل بنفس الطريقة تماماً سواء كانت صفحة
-   واحدة معروضة أو صفحتان معاً (منظر العرض)، لأنه يعتمد على data-p لكل صفحة
-   على حدة بدل افتراض وجود صفحة واحدة فقط */
+   أي إعادة رسم لاحقة لنفس الصفحة */
 function syncCachedPage(){
   const mv = $("mView");
   mv.querySelectorAll(".q-page15[data-p]").forEach(el=>{
@@ -3491,12 +3371,16 @@ document.querySelectorAll("#ayBar .ay-c").forEach(c=>{
   c.addEventListener("click", ()=>{
     if(!M.sel) return;
     const v = +c.dataset.c;
+    const prevV = M.prefs.colors[M.sel];
     if(v===0){
       delete M.prefs.colors[M.sel];
       if(M.prefs.lastColor && M.prefs.lastColor.key===M.sel) M.prefs.lastColor = null;
+      if(prevV && M.prefs.lastByColor[prevV] && M.prefs.lastByColor[prevV].key===M.sel) delete M.prefs.lastByColor[prevV];
     } else {
       M.prefs.colors[M.sel] = v;
       M.prefs.lastColor = {key:M.sel, ts:Date.now()};
+      M.prefs.lastByColor[v] = {key:M.sel, ts:Date.now()};
+      if(prevV && prevV!==v && M.prefs.lastByColor[prevV] && M.prefs.lastByColor[prevV].key===M.sel) delete M.prefs.lastByColor[prevV];
     }
     savePrefs();
     $("mView").querySelectorAll('[data-k="'+M.sel+'"]').forEach(el=>{
@@ -3674,7 +3558,6 @@ async function pgDragEnsure(p, container, token){
 const mDragLayer = $("mDragLayer");
 mvEl.addEventListener("touchstart", e=>{
   if(e.touches.length!==1) return;
-  if(M.landscape) return; /* المصحف بالعرض: تقليب الصفحتين بالأزرار/الشريط فقط، لا سحب باللمس */
   pgDrag = { sx:e.touches[0].clientX, sy:e.touches[0].clientY, dx:0, committed:false, w:(mvEl.clientWidth||320) };
 }, {passive:true});
 mvEl.addEventListener("touchmove", e=>{
@@ -3787,21 +3670,28 @@ function doSearch(){
 }
 function renderMarksList(){
   const box = $("qsRes");
-  const lcKey = M.prefs.lastColor && M.prefs.lastColor.key;
-  const lc = lcKey && ayObj(lcKey) ? lcKey : null;
-  if(!M.prefs.marks.length && !lc){
+  /* آخر آية تم تلوينها بكل لون على حدة — نتجاهل أي مدخل يشير لآية لم تعد
+     موجودة (بيانات قديمة/تالفة) عبر التحقق من ayObj() */
+  const byColorEntries = Object.keys(M.prefs.lastByColor||{})
+    .map(c=>({c:+c, key:M.prefs.lastByColor[c].key}))
+    .filter(e=>ayObj(e.key));
+  if(!M.prefs.marks.length && !byColorEntries.length){
     box.innerHTML = '<div class="qs-hint">اكتب كلمة للبحث في المصحف كاملاً — وعلاماتك المحفوظة 🔖 ستظهر هنا</div>';
     return;
   }
   box.innerHTML = "";
-  if(lc){
-    const o = ayObj(lc);
-    const h = document.createElement("div"); h.className = "qs-hint"; h.textContent = "🎨 آخر آية لوّنتها";
+  if(byColorEntries.length){
+    const h = document.createElement("div"); h.className = "qs-hint"; h.textContent = "🎨 آخر آية لوّنتها بكل لون — اضغط لونًا للانتقال إليها";
     box.appendChild(h);
-    const d = document.createElement("div"); d.className = "qs-item";
-    d.innerHTML = '<div class="w">'+esc(o.text.slice(0,90))+(o.text.length>90?"…":"")+'</div><div class="rf">'+refTxt(lc)+' · صفحة '+fmt(o.page)+'</div>';
-    d.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); goToKey(lc); });
-    box.appendChild(d);
+    const row = document.createElement("div"); row.className = "ay-colors";
+    byColorEntries.sort((a,b)=>a.c-b.c).forEach(e=>{
+      const sw = document.createElement("span");
+      sw.className = "ay-c c"+e.c;
+      sw.title = refTxt(e.key);
+      sw.addEventListener("click", ()=>{ $("qsPanel").classList.remove("open"); goToKey(e.key); });
+      row.appendChild(sw);
+    });
+    box.appendChild(row);
   }
   if(M.prefs.marks.length){
     const h2 = document.createElement("div"); h2.className = "qs-hint"; h2.textContent = "🔖 علاماتك المحفوظة";
@@ -3844,7 +3734,6 @@ function slFlush(){
   slRafPending=false;
   const p = slRafP;
   if(p==null) return;
-  if(M.landscape) return; /* المصحف بالعرض: بلا معاينة حيّة أثناء السحب، تُعرض الصفحتان الصحيحتان فور الإفلات */
   if(QP && M.quran) renderPageDrag(p);
 }
 $("mSlider").addEventListener("input", ()=>{
@@ -3866,11 +3755,11 @@ $("mSlider").addEventListener("change", ()=>{
 /* ---------- التنقل ---------- */
 $("mPrev").addEventListener("click", ()=>{
   hideAyBar();
-  renderPage(M.prefs.page - (M.landscape?2:1));
+  renderPage(M.prefs.page - 1);
 });
 $("mNext").addEventListener("click", ()=>{
   hideAyBar();
-  renderPage(M.prefs.page + (M.landscape?2:1));
+  renderPage(M.prefs.page + 1);
 });
 $("mSurSel").addEventListener("change", ()=>{
   hideAyBar();
@@ -3880,11 +3769,10 @@ $("mSurSel").addEventListener("change", ()=>{
 $("mPageSel").addEventListener("change", ()=>{ hideAyBar(); renderPage(+$("mPageSel").value); });
 /* إعادة ضبط مقاس الصفحة عند تدوير الجهاز أو تغيّر المقاس */
 window.addEventListener("resize", ()=>{
-  if(M.landscape){ if($("mView").querySelector(".q-page-inner15")) fitSpread(); }
-  else if($("mView").querySelector(".q-page-inner15")) fitPage();
+  if($("mView").querySelector(".q-page-inner15")) fitPage();
 });
-/* تبديل منظر المصحف تلقائياً بين صفحة واحدة (عمودي) وصفحتين معاً (أفقي)
-   فور قلب الجهاز فعلياً أثناء فتح المصحف — لا يؤثر على بقية شاشات التطبيق */
+/* إعادة رسم الصفحة الحالية بمقاس مناسب فور قلب الجهاز فعلياً أثناء فتح المصحف
+   — صفحة واحدة قابلة للتمرير سواء عمودياً أو أفقياً، لا يؤثر على بقية شاشات التطبيق */
 LQ.addEventListener("change", ()=>{
   if(!$("mushaf").classList.contains("open")) return;
   M.landscape = LQ.matches;
