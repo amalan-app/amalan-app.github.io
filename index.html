@@ -1017,6 +1017,7 @@ html.dark #mSlider::-moz-range-track{background:rgba(201,196,142,.25)}
       <div class="s" id="mSurName">المصحف الشريف</div>
       <div class="i" id="mInfo">برواية حفص عن عاصم — نص مجمع الملك فهد</div>
     </div>
+    <button class="icon-btn" id="mDarkBtn" aria-label="تبديل الوضع الداكن">🌙</button>
     <button class="icon-btn" id="mSearchBtn" aria-label="البحث">🔍</button>
   </header>
 
@@ -2683,15 +2684,26 @@ $("installAppBtn").addEventListener("click", async ()=>{
   updatePrayerPill();
 })();
 
+/* تبديل الوضع الداكن من أي مكان (مثلاً من داخل المصحف) — يحافظ على تزامن
+   مفتاح الإعدادات الرئيسي (swDark) مع أي تبديل يحدث من واجهة أخرى */
+function toggleDark(){
+  state.settings.dark = !state.settings.dark;
+  const sw = $("swDark"); if(sw) sw.classList.toggle("on", !!state.settings.dark);
+  save(); applyTheme();
+  if(state.settings.haptics) buzz(15);
+  return !!state.settings.dark;
+}
+
 /* واجهة مشتركة لوحدة المصحف */
-window.AMALAN = { $:$, fmt:fmt, showToast:showToast, openLayer:openLayer, closeLayer:closeLayer, buzz:buzz };
+window.AMALAN = { $:$, fmt:fmt, showToast:showToast, openLayer:openLayer, closeLayer:closeLayer, buzz:buzz,
+  toggleDark:toggleDark, isDark:()=>!!state.settings.dark };
 })();
 </script>
 <script>
 /* ======================== المصحف الشريف ٢٫٠ — تفاعل سلس بلا نوافذ ======================== */
 (function(){
 "use strict";
-const { $, fmt, showToast, buzz } = window.AMALAN;
+const { $, fmt, showToast, buzz, toggleDark, isDark } = window.AMALAN;
 const QP_KEY = "amalan:quran_prefs";
 const M = {
   quran:null, surahs:null, byPage:null, flat:null, keyIdx:{},
@@ -2995,7 +3007,17 @@ async function renderPageAuthentic(p){
   if(inner) pageFastCache[p] = {html: mv.innerHTML, qfs: inner.style.getPropertyValue("--qfs")};
 }
 /* عرض سريع أثناء سحب شريط التنقل — من الذاكرة المؤقتة إن وُجدت (فوري تماماً)،
-   وإلا ببناء أخفّ بلا أي قياس/Reflow حتى لا يثقل التمرير */
+   وإلا ببناء صفحة جديدة. الأهم هنا: عند أول بناء لصفحة لم تُزَر من قبل، تُخبَز
+   فيها القياس *الكامل* (fitPageBase + applyLineFit) فوراً قبل تخزينها في
+   الذاكرة المؤقتة — تماماً كما في مسار السحب باللمس (pgDragEnsure) — بدل
+   الاكتفاء بقياس أوّلي ثم تصحيحه لاحقاً. هذا هو الحل الجذري لظاهرة "التمدد"
+   المزعجة أثناء التصفح عبر الشريط: سابقاً كانت الصفحة المعروضة فوراً عند
+   إفلات الشريط تُؤخذ من هذه الذاكرة المؤقتة بقياسها التقريبي غير المكتمل، ثم
+   يُعاد رسمها بُعيد ذلك بالقياس الكامل الصحيح (renderPage → fitPage) فتظهر
+   "قفزة" مرئية في حجم الخط وتمركز الأسطر القصيرة؛ الآن بما أن كل ما يُخزَّن في
+   pageFastCache مكتمل القياس من أول لحظة، فإن أي إعادة رسم لاحقة لنفس الصفحة
+   (سواء عبر الشريط أو الأزرار أو البحث) تُنتج نفس القياس بالضبط، فلا تصحيح
+   متأخر ولا قفزة مرئية إطلاقاً */
 let dragSeq = 0;
 async function renderPageDrag(p){
   const my = ++dragSeq;
@@ -3006,7 +3028,10 @@ async function renderPageDrag(p){
     mv.dataset.curPage = String(p);
     mv.classList.add("lock");
     const inner = mv.querySelector(".q-page-inner15");
-    if(inner){ if(cached.qfs) inner.style.setProperty("--qfs", cached.qfs); else fitPageBase(mv, inner); }
+    if(inner){
+      if(cached.qfs) inner.style.setProperty("--qfs", cached.qfs);
+      else{ const fs = fitPageBase(mv, inner); applyLineFit(mv, inner, fs); }
+    }
     prefetchAround(p);
     return;
   }
@@ -3017,8 +3042,8 @@ async function renderPageDrag(p){
   mv.classList.add("lock");
   const inner = mv.querySelector(".q-page-inner15");
   let fs = null;
-  if(inner) fs = fitPageBase(mv, inner);
-  pageFastCache[p] = {html:h, qfs: (fs!=null)?fs.toFixed(2)+"px":null};
+  if(inner){ fs = fitPageBase(mv, inner); applyLineFit(mv, inner, fs); }
+  pageFastCache[p] = {html: inner?mv.innerHTML:h, qfs: inner?(inner.style.getPropertyValue("--qfs")||null):null};
   prefetchAround(p);
 }
 /* تسخين الذاكرة المؤقتة للصفحات المجاورة في الخلفية أثناء التوقف اللحظي
@@ -3711,8 +3736,20 @@ $("mSearchBtn").addEventListener("click", ()=>{
   const open = !p.classList.contains("open");
   hideAyBar();
   p.classList.toggle("open", open);
-  if(open){ renderMarksList(); setTimeout(()=>$("qsInput").focus(), 380); }
+  if(open){
+    renderMarksList();
+    /* التركيز يجب أن يحدث بشكل متزامن ضمن نفس معالج نقرة المستخدم — أي تأخير
+       (setTimeout) يفقد "تفعيل المستخدم" فتمتنع لوحة المفاتيح على الجوال عن
+       الظهور تلقائياً، فيضطر المستخدم للنقر يدوياً داخل حقل البحث؛ الاستدعاء
+       الفوري هنا يضمن ظهور المؤشر ولوحة المفاتيح تلقائياً من أول نقرة */
+    $("qsInput").focus();
+  }
 });
+$("mDarkBtn").addEventListener("click", ()=>{
+  const on = toggleDark();
+  $("mDarkBtn").textContent = on ? "☀️" : "🌙";
+});
+$("mDarkBtn").textContent = isDark() ? "☀️" : "🌙";
 
 
 /* ---------- شريط التمرير السريع ---------- */
@@ -3786,6 +3823,7 @@ $("btnMushaf").addEventListener("click", async ()=>{
   $("mushaf").classList.add("open");
   $("mushaf").classList.add("zen"); /* صفحة صافية — الأدوات بلمسة المنتصف */
   document.documentElement.classList.add("mushaf-open"); /* يستثني المصحف من التثبيت العمودي الاصطناعي عند القلب أفقياً */
+  $("mDarkBtn").textContent = isDark() ? "☀️" : "🌙"; /* يعكس أي تبديل حدث من إعدادات التطبيق الرئيسية بينما كان المصحف مغلقاً */
   M.landscape = LQ.matches;
   loadQcfData().catch(()=>{}); /* تهيئة بيانات المصحف المطبوع مبكراً */
   const ok = await ensureQuran();
