@@ -19,7 +19,7 @@
 :root{
   --bg0:#F1ECE0; --bg1:#EDE7D8; --bg2:#E9E2D1;
   --gold:#6E6C44; --gold-hi:#52502E; --gold-deep:#3C3A20; --gold-dim:rgba(110,108,68,.16);
-  --ink:#4A4930; --ink-light:#5C5B45; --muted:#8B896B; --faint:#A8A68C;
+  --ink:#4A4930; --ink-quran:#3B3A26; --muted:#8B896B; --faint:#A8A68C;
   --card:rgba(110,108,68,.08); --card-b:rgba(110,108,68,.18);
   --danger:#A85B45;
   --ease:cubic-bezier(.16,1,.3,1);
@@ -388,7 +388,7 @@ html.dark .dph{border-color:rgba(201,196,142,.4);background:rgba(201,196,142,.07
 html.dark{
   --bg0:#14130B; --bg1:#181710; --bg2:#1C1B12;
   --gold:#C9C48E; --gold-hi:#E8E3B8; --gold-deep:#E8E3B8; --gold-dim:rgba(201,196,142,.16);
-  --ink:#EDE8D5; --ink-light:#EFEAD9; --muted:#ABA88A; --faint:#847F63;
+  --ink:#EDE8D5; --ink-quran:#EDE8D5; --muted:#ABA88A; --faint:#847F63;
   --card:rgba(201,196,142,.09); --card-b:rgba(201,196,142,.22);
   --danger:#D98A72;
 }
@@ -669,7 +669,7 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
   font-family:var(--f-display);font-size:12.5px;color:var(--muted);padding:2px 6px 4px;flex:0 0 auto}
 .q-phead b{color:var(--gold-hi);font-weight:700}
 .q-page15 .q-page-inner15{border:none;padding:2px 4px;display:flex;flex-direction:column;justify-content:space-between}
-.q-page15 .q-pnum{margin-top:4px}
+.q-page15 .q-pnum{margin-top:4px;font-size:15px;font-weight:700;color:var(--gold-deep);opacity:.8}
 .q-page15.centered .q-line{justify-content:center;gap:.22em}
 .q-page15.centered .q-run{flex-grow:0 !important;justify-content:flex-start}
 .q-page15.centered .q-page-inner15{justify-content:center;gap:.55em;height:auto !important;
@@ -679,7 +679,7 @@ html.dark .ab-btn.on{border-color:rgba(201,196,142,.55)}
 html.dark .q-page15.centered .q-page-inner15{border-color:rgba(201,196,142,.55);background:rgba(201,196,142,.06);
   box-shadow:inset 0 0 0 5px var(--bg0), inset 0 0 0 6px rgba(201,196,142,.35)}
 .q-line{display:flex;justify-content:space-between;align-items:baseline;direction:rtl;
-  font-size:var(--qfs, clamp(15px,5.2vw,29px));line-height:1.72;color:var(--ink);white-space:nowrap;
+  font-size:var(--qfs, clamp(15px,5.2vw,29px));line-height:1.72;color:var(--ink-quran);white-space:nowrap;
   padding:0 2px;min-height:1.72em}
 .q-line.qcen{justify-content:center;gap:.3em}
 .q-line.qmeasure{justify-content:flex-start}
@@ -690,10 +690,6 @@ html.dark .q-page15.centered .q-page-inner15{border-color:rgba(201,196,142,.55);
 /* الآية ككتلة واحدة متصلة — التظليل يشمل الآية كاملة */
 .q-run{display:flex;justify-content:space-between;align-items:baseline;padding:.06em .12em;
   border-radius:.28em;transition:background .4s var(--ease),box-shadow .4s var(--ease)}
-/* تناوب خفيف جداً بين الآيات الفردية والزوجية داخل كل سورة (بلا تلوين يدوي) —
-   تمييز نص الآية نفسه بدرجة أفتح بنسبة ١٠٪ تقريباً، وليس بإطار/خلفية —
-   انظر ملاحظة q-ae في lineRunsHTML لتفاصيل منطق الاستبعاد عند وجود تلوين خاص */
-.q-run.q-ae{color:var(--ink-light)}
 .q-run .qg,.q-lprun .qg{font-style:normal;display:inline-block}
 .q-run .qend,.q-lprun .qend{color:var(--gold-deep)}
 .q-sh{font-family:'QCF4_QBSML';font-size:1.34em;color:var(--gold-deep);line-height:1.3}
@@ -2021,10 +2017,7 @@ async function playStation(key){
     if(myId!==attemptId) return;
     if(r===true){
       radioStatus("يُبثّ الآن مباشرة · "+st.name);
-      const a = radioAudio;
-      a.addEventListener("waiting", ()=>{ if(radioCurrent===key && radioAudio===a) radioStatus("انقطاع مؤقت… يُعاد الاتصال"); });
-      a.addEventListener("playing", ()=>{ if(radioCurrent===key && radioAudio===a) radioStatus("يُبثّ الآن مباشرة · "+st.name); });
-      a.addEventListener("error", ()=>{ if(radioCurrent===key && radioAudio===a){ radioStatus("انقطع البث — أعد اختيار المحطة"); stopRadio(true); } });
+      wireRadioAudioEvents(key);
       radioUI();
       return;
     }
@@ -2040,6 +2033,37 @@ async function playStation(key){
     radioStatus("تعذّر الاتصال بكل مصادر البث — تحقّق من اتصال الإنترنت ثم أعد المحاولة");
   }
   stopRadio(true); radioUI();
+}
+/* يربط أحداث عنصر الصوت الحالي: "waiting" (انقطاع مؤقت بالبث نفسه) لا نتدخل
+   فيه غير التنبيه لأن المتصفح يتعافى منه وحده غالباً، أما "error" (انقطاع
+   حقيقي على مستوى الاتصال) فكان سابقاً يوقف الإذاعة نهائياً فوراً — وهذا بالذات
+   ما جعلها "تتوقف" حين يفتح المستخدم المصحف: أي عمل ثقيل مؤقت على المتصفح
+   (تحميل بيانات الصفحة المطبوعة أول مرة) قد يعطّل مخزن الصوت المؤقت لحظياً
+   فيُطلق حدث "error" رغم أن الاتصال بالبث نفسه سليم. الحل: إعادة الاتصال
+   تلقائياً بدل الاستسلام فوراً — فتتعافى الإذاعة وحدها خلال ثوانٍ */
+function wireRadioAudioEvents(key){
+  const a = radioAudio;
+  a.addEventListener("waiting", ()=>{ if(radioCurrent===key && radioAudio===a) radioStatus("انقطاع مؤقت… يُعاد الاتصال"); });
+  a.addEventListener("playing", ()=>{ if(radioCurrent===key && radioAudio===a) radioStatus("يُبثّ الآن مباشرة · "+STATIONS[key].name); });
+  a.addEventListener("error", ()=>{ if(radioCurrent===key && radioAudio===a) reconnectStation(key); });
+}
+async function reconnectStation(key){
+  attemptId++;
+  const myId = attemptId;
+  const st = STATIONS[key];
+  for(let i=0;i<st.sources.length;i++){
+    if(myId!==attemptId || radioCurrent!==key) return;
+    radioStatus("انقطع الاتصال بـ"+st.name+" — يُعاد الاتصال تلقائياً"+(i>0?" · مصدر بديل "+fmt(i+1):"")+"…");
+    const r = await trySource(st.sources[i], myId);
+    if(myId!==attemptId || radioCurrent!==key) return;
+    if(r===true){
+      radioStatus("يُبثّ الآن مباشرة · "+st.name);
+      wireRadioAudioEvents(key);
+      radioUI();
+      return;
+    }
+  }
+  if(radioCurrent===key){ radioStatus("تعذّر إعادة الاتصال — أعد اختيار المحطة"); stopRadio(true); radioUI(); }
 }
 
 document.querySelectorAll(".station").forEach(s=>{
@@ -2876,14 +2900,8 @@ function lineRunsHTML(L, fam){
   return segs.map(sg=>{
     if(sg.k){
       const k=sg.k, c=M.prefs.colors[k], mk=M.prefs.marks.includes(k);
-      /* تناوب خفيف جداً في درجة خلفية الآيات غير المُلوَّنة يدوياً: الآيات
-         الزوجية (٢، ٤، ٦...) داخل كل سورة تأخذ درجة أفتح قليلاً من الفردية،
-         لمساعدة العين على تمييز حدود كل آية أثناء القراءة المتصلة. يُتجاهَل
-         تماماً إن كان للمستخدم تلوين خاص بالآية (c) حتى لا يتعارض بصرياً معه؛
-         رقم الآية يُؤخذ من ayObj فيُعاد الحساب تلقائياً من جديد لكل سورة */
-      const ae = !c && (ayObj(k).a % 2 === 0);
       const inner=sg.g.map(g=>'<i class="qg'+(g[2]==="e"?' qend':'')+'"'+(g[1]===1?' style="font-family:QCF4_QBSML"':'')+'>'+String.fromCodePoint(g[0])+'</i>').join('');
-      return '<span class="q-a q-run'+(c?' qc'+c:'')+(mk?' qmk':'')+(ae?' q-ae':'')+(M.playing===k?' playing':'')+(M.sel===k?' sel':'')+
+      return '<span class="q-a q-run'+(c?' qc'+c:'')+(mk?' qmk':'')+(M.playing===k?' playing':'')+(M.sel===k?' sel':'')+
         '" data-k="'+k+'" style="flex-grow:'+sg.g.length+';font-family:\''+fam+'\'">'+inner+'</span>';
     }
     const g=sg.g[0], ch=String.fromCodePoint(g[0]);
@@ -3083,8 +3101,15 @@ async function prefetchAround(p){
     const targets = [p+1, p-1, p+2, p-2].filter(q=>q>=1 && q<=604 && !pageFastCache[q]);
     for(const q of targets){
       if(pageFastCache[q]) continue;
-      const h = await buildPageHTML(q, true);
-      if(!pageFastCache[q]) pageFastCache[q] = {html:h, qfs:null};
+      /* هذا التحميل المسبق يُسخّن فقط تحميل بيانات الصفحة والخط (loadQcfData
+         وensureQcfFont داخل buildPageHTML، وكلاهما مُخزَّن بالفعل)، ولا يُخزَّن
+         ناتجه في pageFastCache إطلاقاً: القياس (fitPageBase/applyLineFit)
+         يحتاج عنصراً حياً فعلياً في الصفحة ليقيس عليه، وتخزين صفحة بلا قياس
+         فعلي هنا كان بالضبط سبب ظهور الصفحة "مرتفعة مقبوظة" لحظياً ثم استقرارها
+         عند تقليب الصفحات لاحقاً بالسحب: كانت معاينة السحب تعرض هذه الصفحة
+         بمقاس افتراضي عام (لا صلة له بمحتواها الفعلي) ريثما يُستبدل بالمقاس
+         الصحيح فور ظهور الصفحة الحقيقية */
+      await buildPageHTML(q, true);
     }
   }catch(e){}
   prefetchBusy = false;
@@ -3583,16 +3608,21 @@ function pgDragSlide(p){
   const el = document.createElement("div");
   el.className = "mv-clone";
   const cached = pageFastCache[p];
-  if(cached){
+  /* لا نعرض المعاينة من الذاكرة المؤقتة إلا إذا كانت مقاسة فعلياً (qfs محفوظ)
+     — أي إدخال بلا قياس كامل يُترك فارغاً هنا (كحال الصفحة غير المزارة إطلاقاً)
+     ريثما يبنيه pgDragEnsure أدناه بقياس صحيح، بدل عرضها بمقاس افتراضي عام
+     مؤقتاً ثم قفزها إلى مقاسها الصحيح بعد انتهاء السحب */
+  if(cached && cached.qfs){
     el.innerHTML = cached.html;
-    if(cached.qfs){ const inner=el.querySelector(".q-page-inner15"); if(inner) inner.style.setProperty("--qfs", cached.qfs); }
+    const inner=el.querySelector(".q-page-inner15"); if(inner) inner.style.setProperty("--qfs", cached.qfs);
   }
   return el;
 }
 async function pgDragEnsure(p, container, token){
-  if(pageFastCache[p]) return; /* عُرضت مسبقاً فوراً أعلاه، لا حاجة لإعادة البناء */
+  const cached = pageFastCache[p];
+  if(cached && cached.qfs) return; /* عُرضت مسبقاً فوراً أعلاه بقياس صحيح، لا حاجة لإعادة البناء */
   try{
-    const h = await buildPageHTML(p, true);
+    const h = cached ? cached.html : await buildPageHTML(p, true); /* إن وُجد HTML مسبقاً (بلا قياس) نعيد استخدامه بدل إعادة تحميله */
     if(!pgDrag || pgDrag.token!==token) return; /* تجاوزه السحب أو انتهى قبل اكتمال البناء */
     container.innerHTML = h;
     const inner = container.querySelector(".q-page-inner15");
