@@ -2978,17 +2978,26 @@ async function renderPageAuthentic(p){
   const mv = $("mView");
   const cached = pageFastCache[p];
   let h;
+  /* هل الصفحة معروضة فعلاً الآن بنفس محتوى الذاكرة المؤقتة (رسمها السحب أو
+     تقليب الصفحة فوراً قبل قليل)؟ إن كانت كذلك، لا نلمس innerHTML ولا نعيد
+     القياس إطلاقاً — إعادة القياس هنا كانت هي بالتحديد سبب "الانقباض ثم
+     التمدد" المزعج عند تقليب الصفحات: fitPageBase() يحسب --qfs من جديد بناءً
+     على قياس حيّ لعنصر mView الحقيقي، وقد يُنتج رقماً مختلفاً قليلاً عمّا
+     كان محسوباً سلفاً على نسخة السحب (mv-clone) المستخدمة أثناء اللمس، فيظهر
+     تغيّر مقاس مرئي مزعج يشمل حتى زخارف نهاية الآيات (لأنها بحجم نسبي لنفس
+     المتغيّر). الحل: الثقة الكاملة بالذاكرة المؤقتة عندما تكون هي المعروضة
+     فعلاً بالفعل — بلا أي "تحسين هادئ" لاحق يُخبّئ فرقاً مرئياً */
+  let alreadyShown = false;
   if(cached){
     h = cached.html;
-    /* إن كانت هذه الصفحة معروضة فعلاً بنفس المحتوى (رسمها السحب فوراً قبل قليل)
-       فلا داعي لأي لمس لـ innerHTML — هذا بالضبط ما يمنع الوميض/التأخر بعد
-       الإفلات؛ نكتفي بإكمال القياس الدقيق أدناه لتحسين الحجم النهائي بهدوء */
     if(mv.dataset.curPage!==String(p) || !mv.querySelector(".q-page15")){
       mv.innerHTML = h;
       mv.dataset.curPage = String(p);
       mv.classList.add("lock");
       const inner = mv.querySelector(".q-page-inner15");
       if(inner){ if(cached.qfs) inner.style.setProperty("--qfs", cached.qfs); else fitPageBase(mv, inner); }
+    }else{
+      alreadyShown = true;
     }
   }else{
     h = await buildPageHTML(p, false);
@@ -2998,13 +3007,15 @@ async function renderPageAuthentic(p){
     mv.classList.add("lock");
   }
   if(M.prefs.page!==p) return;
-  fitPage();
-  /* القياس أصبح متزامناً الآن، فنحدّث الذاكرة المؤقتة فوراً بالنسخة النهائية
-     المصححة فعلياً من DOM (متضمّنة تصنيفات الأسطر القصيرة ومقاس الخط بعد
-     ضمانة عدم التجاوز) — بحيث تكون أي معاينة لاحقة لهذه الصفحة (بالسحب أو
-     غيره) صحيحة تماماً من أول لحظة عرض، بلا أي تصحيح متأخر تراه العين */
-  const inner = mv.querySelector(".q-page-inner15");
-  if(inner) pageFastCache[p] = {html: mv.innerHTML, qfs: inner.style.getPropertyValue("--qfs")};
+  if(!alreadyShown){
+    fitPage();
+    /* القياس أصبح متزامناً الآن، فنحدّث الذاكرة المؤقتة فوراً بالنسخة النهائية
+       المصححة فعلياً من DOM (متضمّنة تصنيفات الأسطر القصيرة ومقاس الخط بعد
+       ضمانة عدم التجاوز) — بحيث تكون أي معاينة لاحقة لهذه الصفحة (بالسحب أو
+       غيره) صحيحة تماماً من أول لحظة عرض، بلا أي تصحيح متأخر تراه العين */
+    const inner = mv.querySelector(".q-page-inner15");
+    if(inner) pageFastCache[p] = {html: mv.innerHTML, qfs: inner.style.getPropertyValue("--qfs")};
+  }
 }
 /* عرض سريع أثناء سحب شريط التنقل — من الذاكرة المؤقتة إن وُجدت (فوري تماماً)،
    وإلا ببناء صفحة جديدة. الأهم هنا: عند أول بناء لصفحة لم تُزَر من قبل، تُخبَز
@@ -3771,12 +3782,22 @@ function slFlush(){
   slRafPending=false;
   const p = slRafP;
   if(p==null) return;
+  /* طلب خط هذه الصفحة هنا فقط (مرة واحدة كحد أقصى لكل إطار رسم، لآخر صفحة
+     وصل إليها السحب) لا داخل معالج "input" — كل صفحة من صفحات المصحف لها
+     ملف خط QCF مستقل، وأثناء سحب سريع عبر عشرات/مئات الصفحات كان معالج
+     "input" يطلب خط كل صفحة عبَرها الإصبع فوراً (مرة لكل رقم صفحة مختلف)،
+     فتتكدّس عشرات طلبات الشبكة المتزامنة، ويُحجَز الخط الفعلي المطلوب عند
+     الإفلات خلف طابور من طلبات لصفحات لم تعد ذات صلة — وهذا بالتحديد سبب
+     ثقل الشريط وتأخّر ظهور الصفحة بعد التوقف عدة ثوانٍ. تأطير الطلب هنا مع
+     الرسم نفسه يقلّصه لطلب واحد فقط لكل إطار، فلا يتنافس آخر خط مطلوب مع
+     عشرات الطلبات المهجورة */
+  if(QP) ensureQcfFont(QP[p-1].f).catch(()=>{});
   if(QP && M.quran) renderPageDrag(p);
 }
 $("mSlider").addEventListener("input", ()=>{
   if(!M.surahs) return;
   const p = +$("mSlider").value;
-  if(p!==lastTickP){ lastTickP=p; slTick(); if(QP) ensureQcfFont(QP[p-1].f).catch(()=>{}); }
+  if(p!==lastTickP){ lastTickP=p; slTick(); }
   /* عرض حي للصفحة أثناء السحب — مؤطّر مع كل إطار رسم (بلا أي تأخير زمني ثابت)
      ومن الذاكرة المؤقتة غالباً، فيكون فورياً وخفيفاً حتى في السحب السريع جداً */
   slRafP = p;
