@@ -152,7 +152,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:6px
   font-size:14px;font-weight:700;color:var(--gold-hi);border-color:rgba(110,108,68,.4);background:var(--card)}
 html.dark .tools-main .tool{border-color:rgba(201,196,142,.4)}
 .tool{height:40px;padding:0 16px;border-radius:20px;border:1px solid var(--card-b);background:var(--card);
-  color:var(--muted);font-family:var(--f-ui);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;
+  color:var(--gold-hi);font-family:var(--f-ui);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;
   transition:all .3s var(--ease)}
 .tool:active{transform:scale(.94);color:var(--gold);border-color:var(--gold-dim)}
 
@@ -2513,13 +2513,22 @@ function ipLocate(){
     }).catch(()=>{ updatePrayerPill(); });
   });
 }
-async function autoLocate(){
+async function autoLocate(interactive){
   /* وضع "تلقائي": نحاول موقع الجهاز أولاً، فإن رُفض الإذن أو تعذّر نستخدم
-     تقدير الموقع عبر عنوان الإنترنت كحل احتياطي بلا إزعاج المستخدم */
+     تقدير الموقع عبر عنوان الإنترنت كحل احتياطي بلا إزعاج المستخدم.
+     ملاحظة: صندوق الملاحظة (loc-note) يقع داخل حاوية مطوية (max-height:0)
+     في الوضع التلقائي، فلا يظهر للمستخدم إطلاقاً حين يكون في هذا الوضع —
+     لذا عند تحديث تفاعلي (بضغطة المستخدم على ⟳ أو "تلقائي") نُظهر توستاً
+     مضموناً دائماً، وإلا بدا الزر وكأنه لا يفعل شيئاً عند رفض إذن الموقع */
   const r = await sysLocate();
   if(!r.ok){
-    if(r.code===1) showLocNote("تم رفض إذن الموقع من الجهاز — يمكنك تفعيله من إعدادات النظام، أو تحديد موقعك يدوياً بالأسفل");
-    else showLocNote("");
+    if(r.code===1){
+      showLocNote("تم رفض إذن الموقع من الجهاز — يمكنك تفعيله من إعدادات النظام، أو تحديد موقعك يدوياً بالأسفل");
+      if(interactive) showToast("⚠️ إذن الموقع مرفوض من جهازك — فعّله من إعدادات النظام أو حدّد موقعك يدوياً بالأسفل");
+    }else{
+      showLocNote("");
+      if(interactive) showToast("تعذّر الوصول لموقع جهازك بدقة — استُخدم تقدير تقريبي عبر الإنترنت بدلاً منه");
+    }
     await ipLocate();
   }else{
     showLocNote("");
@@ -2566,7 +2575,7 @@ $("locModeAuto").addEventListener("click", async ()=>{
   renderLocUI(); showLocNote("");
   $("locResults").innerHTML=""; $("locSearchInput").value="";
   $("locRefreshBtn").classList.add("spin");
-  await autoLocate();
+  await autoLocate(true);
   $("locRefreshBtn").classList.remove("spin");
 });
 $("locModeManual").addEventListener("click", ()=>{
@@ -2577,7 +2586,7 @@ $("locModeManual").addEventListener("click", ()=>{
 $("locRefreshBtn").addEventListener("click", async ()=>{
   if(geo.mode==="manual"){ $("locSearchInput").focus(); return; }
   $("locRefreshBtn").classList.add("spin");
-  await autoLocate();
+  await autoLocate(true);
   $("locRefreshBtn").classList.remove("spin");
 });
 let locSearchTimer = null, locSearchSeq = 0;
