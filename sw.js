@@ -1,5 +1,5 @@
 /* أملآ — عامل الخدمة: عمل بدون إنترنت مع وصول التحديثات فور توفرها */
-const CACHE = "amalan-v4";
+const CACHE = "amalan-v5";
 const CORE = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
